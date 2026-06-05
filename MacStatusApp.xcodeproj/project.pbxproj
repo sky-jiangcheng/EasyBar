@@ -1,0 +1,325 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		100000000000000000000101 /* MacStatusApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000001 /* MacStatusApp.swift */; };
+		100000000000000000000102 /* RunningAppInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000002 /* RunningAppInfo.swift */; };
+		100000000000000000000103 /* ClockStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000003 /* ClockStore.swift */; };
+		100000000000000000000104 /* RunningAppsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000004 /* RunningAppsStore.swift */; };
+		100000000000000000000105 /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000005 /* Formatters.swift */; };
+		100000000000000000000106 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000006 /* ContentView.swift */; };
+		100000000000000000000107 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000007 /* SidebarView.swift */; };
+		100000000000000000000108 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000008 /* HeaderView.swift */; };
+		100000000000000000000109 /* RunningAppsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000009 /* RunningAppsView.swift */; };
+		10000000000000000000010A /* ShortcutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000A /* ShortcutsView.swift */; };
+		10000000000000000000010B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000B /* SettingsView.swift */; };
+		10000000000000000000010C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000F /* Assets.xcassets */; };
+		10000000000000000000010D /* DashboardLaunchOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000010 /* DashboardLaunchOptions.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		100000000000000000000001 /* MacStatusApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacStatusApp.swift; sourceTree = "<group>"; };
+		100000000000000000000002 /* RunningAppInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningAppInfo.swift; sourceTree = "<group>"; };
+		100000000000000000000003 /* ClockStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockStore.swift; sourceTree = "<group>"; };
+		100000000000000000000004 /* RunningAppsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningAppsStore.swift; sourceTree = "<group>"; };
+		100000000000000000000005 /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
+		100000000000000000000006 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		100000000000000000000007 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		100000000000000000000008 /* HeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
+		100000000000000000000009 /* RunningAppsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningAppsView.swift; sourceTree = "<group>"; };
+		10000000000000000000000A /* ShortcutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsView.swift; sourceTree = "<group>"; };
+		10000000000000000000000B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		10000000000000000000000C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		10000000000000000000000D /* MacStatus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MacStatus.entitlements; sourceTree = "<group>"; };
+		10000000000000000000000E /* MacStatusApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacStatusApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		10000000000000000000000F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		100000000000000000000010 /* DashboardLaunchOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardLaunchOptions.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		100000000000000000000201 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		100000000000000000000301 = {
+			isa = PBXGroup;
+			children = (
+				100000000000000000000302 /* Sources/MacStatusApp/App */,
+				100000000000000000000303 /* Sources/MacStatusApp/Models */,
+				100000000000000000000304 /* Sources/MacStatusApp/Stores */,
+				100000000000000000000305 /* Sources/MacStatusApp/Support */,
+				100000000000000000000306 /* Sources/MacStatusApp/Views */,
+				100000000000000000000307 /* Sources/MacStatusApp/Resources */,
+				100000000000000000000308 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		100000000000000000000302 /* Sources/MacStatusApp/App */ = {
+			isa = PBXGroup;
+			children = (
+				100000000000000000000001 /* MacStatusApp.swift */,
+			);
+			path = Sources/MacStatusApp/App;
+			sourceTree = SOURCE_ROOT;
+		};
+		100000000000000000000303 /* Sources/MacStatusApp/Models */ = {
+			isa = PBXGroup;
+			children = (
+				100000000000000000000002 /* RunningAppInfo.swift */,
+			);
+			path = Sources/MacStatusApp/Models;
+			sourceTree = SOURCE_ROOT;
+		};
+		100000000000000000000304 /* Sources/MacStatusApp/Stores */ = {
+			isa = PBXGroup;
+			children = (
+				100000000000000000000003 /* ClockStore.swift */,
+				100000000000000000000004 /* RunningAppsStore.swift */,
+			);
+			path = Sources/MacStatusApp/Stores;
+			sourceTree = SOURCE_ROOT;
+		};
+		100000000000000000000305 /* Sources/MacStatusApp/Support */ = {
+			isa = PBXGroup;
+			children = (
+				100000000000000000000005 /* Formatters.swift */,
+				100000000000000000000010 /* DashboardLaunchOptions.swift */,
+			);
+			path = Sources/MacStatusApp/Support;
+			sourceTree = SOURCE_ROOT;
+		};
+		100000000000000000000306 /* Sources/MacStatusApp/Views */ = {
+			isa = PBXGroup;
+			children = (
+				100000000000000000000006 /* ContentView.swift */,
+				100000000000000000000007 /* SidebarView.swift */,
+				100000000000000000000008 /* HeaderView.swift */,
+				100000000000000000000009 /* RunningAppsView.swift */,
+				10000000000000000000000A /* ShortcutsView.swift */,
+				10000000000000000000000B /* SettingsView.swift */,
+			);
+			path = Sources/MacStatusApp/Views;
+			sourceTree = SOURCE_ROOT;
+		};
+		100000000000000000000307 /* Sources/MacStatusApp/Resources */ = {
+			isa = PBXGroup;
+			children = (
+				10000000000000000000000C /* Info.plist */,
+				10000000000000000000000D /* MacStatus.entitlements */,
+				10000000000000000000000F /* Assets.xcassets */,
+			);
+			path = Sources/MacStatusApp/Resources;
+			sourceTree = SOURCE_ROOT;
+		};
+		100000000000000000000308 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				10000000000000000000000E /* MacStatusApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		100000000000000000000401 /* MacStatusApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 100000000000000000000701 /* Build configuration list for PBXNativeTarget "MacStatusApp" */;
+			buildPhases = (
+				100000000000000000000501 /* Sources */,
+				100000000000000000000201 /* Frameworks */,
+				100000000000000000000502 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MacStatusApp;
+			productName = MacStatusApp;
+			productReference = 10000000000000000000000E /* MacStatusApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		100000000000000000000601 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2650;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					100000000000000000000401 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+				};
+			};
+			buildConfigurationList = 100000000000000000000700 /* Build configuration list for PBXProject "MacStatusApp" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 100000000000000000000301;
+			productRefGroup = 100000000000000000000308 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				100000000000000000000401 /* MacStatusApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		100000000000000000000502 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				10000000000000000000010C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		100000000000000000000501 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				100000000000000000000101 /* MacStatusApp.swift in Sources */,
+				100000000000000000000102 /* RunningAppInfo.swift in Sources */,
+				100000000000000000000103 /* ClockStore.swift in Sources */,
+				100000000000000000000104 /* RunningAppsStore.swift in Sources */,
+				100000000000000000000105 /* Formatters.swift in Sources */,
+				100000000000000000000106 /* ContentView.swift in Sources */,
+				100000000000000000000107 /* SidebarView.swift in Sources */,
+				100000000000000000000108 /* HeaderView.swift in Sources */,
+				100000000000000000000109 /* RunningAppsView.swift in Sources */,
+				10000000000000000000010A /* ShortcutsView.swift in Sources */,
+				10000000000000000000010B /* SettingsView.swift in Sources */,
+				10000000000000000000010D /* DashboardLaunchOptions.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		100000000000000000000801 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		100000000000000000000802 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		100000000000000000000803 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/MacStatusApp/Resources/MacStatus.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = M3A6LK593A;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/MacStatusApp/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jiangcheng.MacStatusApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		100000000000000000000804 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/MacStatusApp/Resources/MacStatus.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = M3A6LK593A;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/MacStatusApp/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jiangcheng.MacStatusApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		100000000000000000000700 /* Build configuration list for PBXProject "MacStatusApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				100000000000000000000801 /* Debug */,
+				100000000000000000000802 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		100000000000000000000701 /* Build configuration list for PBXNativeTarget "MacStatusApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				100000000000000000000803 /* Debug */,
+				100000000000000000000804 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 100000000000000000000601 /* Project object */;
+}
