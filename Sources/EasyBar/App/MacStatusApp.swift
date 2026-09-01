@@ -4,43 +4,49 @@ import SwiftUI
 @main
 struct EasyBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @State private var runningAppsStore = RunningAppsStore()
-    @State private var clock = ClockStore()
+    @State private var settingsStore = SettingsStore()
+    @State private var accessibilityManager = AccessibilityManager()
 
     var body: some Scene {
-        WindowGroup("EasyBar", id: "main") {
-            ContentView()
-                .environment(runningAppsStore)
-                .environment(clock)
-                .frame(minWidth: 1040, minHeight: 680)
-                .task {
-                    runningAppsStore.refresh()
-                    clock.start()
-                }
-        }
-        .commands {
-            CommandMenu("Dashboard") {
-                Button("Refresh Running Apps") {
-                    runningAppsStore.refresh()
-                }
-                .keyboardShortcut("r", modifiers: [.command])
-
-                Button("Hide EasyBar") {
-                    NSApp.hide(nil)
-                }
-                .keyboardShortcut("h", modifiers: [.command, .shift])
-            }
-        }
-
         Settings {
             SettingsView()
+                .environment(settingsStore)
+                .environment(appDelegate.menuBarMonitor)
+                .environment(accessibilityManager)
         }
+        .defaultSize(width: 520, height: 480)
     }
+
+    init() {}
 }
 
-final class AppDelegate: NSObject, NSApplicationDelegate {
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
+    private var statusBarController: StatusBarManager?
+    private(set) var aggregationPanel: AggregationPanel?
+
+    private var settingsStore = SettingsStore()
+    private var accessibilityManager = AccessibilityManager()
+    private(set) lazy var menuBarMonitor = MenuBarMonitor(
+        accessibilityManager: accessibilityManager,
+        settingsStore: settingsStore
+    )
+
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.regular)
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.setActivationPolicy(.accessory)
+
+        aggregationPanel = AggregationPanel(
+            menuBarMonitor: menuBarMonitor,
+            settingsStore: settingsStore
+        )
+
+        statusBarController = StatusBarManager(
+            aggregationPanel: aggregationPanel!,
+            menuBarMonitor: menuBarMonitor,
+            settingsStore: settingsStore,
+            accessibilityManager: accessibilityManager
+        )
+
+        menuBarMonitor.startMonitoring()
     }
 }
