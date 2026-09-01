@@ -50,7 +50,7 @@ struct ContentView: View {
                     ShortcutsView()
                 }
             }
-            .navigationTitle("MacStatus")
+            .navigationTitle("EasyBar")
             .toolbar {
                 ToolbarItemGroup {
                     Button {

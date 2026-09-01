@@ -3,7 +3,7 @@ import SwiftUI
 struct ShortcutsView: View {
     private let shortcuts = [
         ShortcutInfo(keys: "Command R", action: "Refresh running apps"),
-        ShortcutInfo(keys: "Command Shift H", action: "Hide MacStatus"),
+        ShortcutInfo(keys: "Command Shift H", action: "Hide EasyBar"),
         ShortcutInfo(keys: "Command F", action: "Search apps"),
         ShortcutInfo(keys: "Command W", action: "Close window")
     ]

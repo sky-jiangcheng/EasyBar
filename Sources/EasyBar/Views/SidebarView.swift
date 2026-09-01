@@ -29,7 +29,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationTitle("MacStatus")
+        .navigationTitle("EasyBar")
     }
 }
 

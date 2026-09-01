@@ -2,13 +2,13 @@ import AppKit
 import SwiftUI
 
 @main
-struct MacStatusApp: App {
+struct EasyBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var runningAppsStore = RunningAppsStore()
     @State private var clock = ClockStore()
 
     var body: some Scene {
-        WindowGroup("MacStatus", id: "main") {
+        WindowGroup("EasyBar", id: "main") {
             ContentView()
                 .environment(runningAppsStore)
                 .environment(clock)
@@ -25,7 +25,7 @@ struct MacStatusApp: App {
                 }
                 .keyboardShortcut("r", modifiers: [.command])
 
-                Button("Hide MacStatus") {
+                Button("Hide EasyBar") {
                     NSApp.hide(nil)
                 }
                 .keyboardShortcut("h", modifiers: [.command, .shift])

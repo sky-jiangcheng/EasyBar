@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "MacStatusApp",
+    name: "EasyBar",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "MacStatusApp", targets: ["MacStatusApp"])
+        .executable(name: "EasyBar", targets: ["EasyBar"])
     ],
     targets: [
         .executableTarget(
-            name: "MacStatusApp",
-            path: "Sources/MacStatusApp",
+            name: "EasyBar",
+            path: "Sources/EasyBar",
             exclude: [
                 "Resources"
             ]

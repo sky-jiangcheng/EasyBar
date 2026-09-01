@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		100000000000000000000101 /* MacStatusApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000001 /* MacStatusApp.swift */; };
+		100000000000000000000101 /* EasyBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000001 /* EasyBar.swift */; };
 		100000000000000000000102 /* RunningAppInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000002 /* RunningAppInfo.swift */; };
 		100000000000000000000103 /* ClockStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000003 /* ClockStore.swift */; };
 		100000000000000000000104 /* RunningAppsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000004 /* RunningAppsStore.swift */; };
@@ -23,7 +23,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		100000000000000000000001 /* MacStatusApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacStatusApp.swift; sourceTree = "<group>"; };
+		100000000000000000000001 /* EasyBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EasyBar.swift; sourceTree = "<group>"; };
 		100000000000000000000002 /* RunningAppInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningAppInfo.swift; sourceTree = "<group>"; };
 		100000000000000000000003 /* ClockStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockStore.swift; sourceTree = "<group>"; };
 		100000000000000000000004 /* RunningAppsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningAppsStore.swift; sourceTree = "<group>"; };
@@ -35,8 +35,8 @@
 		10000000000000000000000A /* ShortcutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsView.swift; sourceTree = "<group>"; };
 		10000000000000000000000B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		10000000000000000000000C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		10000000000000000000000D /* MacStatus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MacStatus.entitlements; sourceTree = "<group>"; };
-		10000000000000000000000E /* MacStatusApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacStatusApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		10000000000000000000000D /* EasyBar.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EasyBar.entitlements; sourceTree = "<group>"; };
+		10000000000000000000000E /* EasyBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EasyBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		10000000000000000000000F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		100000000000000000000010 /* DashboardLaunchOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardLaunchOptions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -55,51 +55,51 @@
 		100000000000000000000301 = {
 			isa = PBXGroup;
 			children = (
-				100000000000000000000302 /* Sources/MacStatusApp/App */,
-				100000000000000000000303 /* Sources/MacStatusApp/Models */,
-				100000000000000000000304 /* Sources/MacStatusApp/Stores */,
-				100000000000000000000305 /* Sources/MacStatusApp/Support */,
-				100000000000000000000306 /* Sources/MacStatusApp/Views */,
-				100000000000000000000307 /* Sources/MacStatusApp/Resources */,
+				100000000000000000000302 /* Sources/EasyBar/App */,
+				100000000000000000000303 /* Sources/EasyBar/Models */,
+				100000000000000000000304 /* Sources/EasyBar/Stores */,
+				100000000000000000000305 /* Sources/EasyBar/Support */,
+				100000000000000000000306 /* Sources/EasyBar/Views */,
+				100000000000000000000307 /* Sources/EasyBar/Resources */,
 				100000000000000000000308 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		100000000000000000000302 /* Sources/MacStatusApp/App */ = {
+		100000000000000000000302 /* Sources/EasyBar/App */ = {
 			isa = PBXGroup;
 			children = (
-				100000000000000000000001 /* MacStatusApp.swift */,
+				100000000000000000000001 /* EasyBar.swift */,
 			);
-			path = Sources/MacStatusApp/App;
+			path = Sources/EasyBar/App;
 			sourceTree = SOURCE_ROOT;
 		};
-		100000000000000000000303 /* Sources/MacStatusApp/Models */ = {
+		100000000000000000000303 /* Sources/EasyBar/Models */ = {
 			isa = PBXGroup;
 			children = (
 				100000000000000000000002 /* RunningAppInfo.swift */,
 			);
-			path = Sources/MacStatusApp/Models;
+			path = Sources/EasyBar/Models;
 			sourceTree = SOURCE_ROOT;
 		};
-		100000000000000000000304 /* Sources/MacStatusApp/Stores */ = {
+		100000000000000000000304 /* Sources/EasyBar/Stores */ = {
 			isa = PBXGroup;
 			children = (
 				100000000000000000000003 /* ClockStore.swift */,
 				100000000000000000000004 /* RunningAppsStore.swift */,
 			);
-			path = Sources/MacStatusApp/Stores;
+			path = Sources/EasyBar/Stores;
 			sourceTree = SOURCE_ROOT;
 		};
-		100000000000000000000305 /* Sources/MacStatusApp/Support */ = {
+		100000000000000000000305 /* Sources/EasyBar/Support */ = {
 			isa = PBXGroup;
 			children = (
 				100000000000000000000005 /* Formatters.swift */,
 				100000000000000000000010 /* DashboardLaunchOptions.swift */,
 			);
-			path = Sources/MacStatusApp/Support;
+			path = Sources/EasyBar/Support;
 			sourceTree = SOURCE_ROOT;
 		};
-		100000000000000000000306 /* Sources/MacStatusApp/Views */ = {
+		100000000000000000000306 /* Sources/EasyBar/Views */ = {
 			isa = PBXGroup;
 			children = (
 				100000000000000000000006 /* ContentView.swift */,
@@ -109,23 +109,23 @@
 				10000000000000000000000A /* ShortcutsView.swift */,
 				10000000000000000000000B /* SettingsView.swift */,
 			);
-			path = Sources/MacStatusApp/Views;
+			path = Sources/EasyBar/Views;
 			sourceTree = SOURCE_ROOT;
 		};
-		100000000000000000000307 /* Sources/MacStatusApp/Resources */ = {
+		100000000000000000000307 /* Sources/EasyBar/Resources */ = {
 			isa = PBXGroup;
 			children = (
 				10000000000000000000000C /* Info.plist */,
-				10000000000000000000000D /* MacStatus.entitlements */,
+				10000000000000000000000D /* EasyBar.entitlements */,
 				10000000000000000000000F /* Assets.xcassets */,
 			);
-			path = Sources/MacStatusApp/Resources;
+			path = Sources/EasyBar/Resources;
 			sourceTree = SOURCE_ROOT;
 		};
 		100000000000000000000308 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				10000000000000000000000E /* MacStatusApp.app */,
+				10000000000000000000000E /* EasyBar.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -133,9 +133,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		100000000000000000000401 /* MacStatusApp */ = {
+		100000000000000000000401 /* EasyBar */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 100000000000000000000701 /* Build configuration list for PBXNativeTarget "MacStatusApp" */;
+			buildConfigurationList = 100000000000000000000701 /* Build configuration list for PBXNativeTarget "EasyBar" */;
 			buildPhases = (
 				100000000000000000000501 /* Sources */,
 				100000000000000000000201 /* Frameworks */,
@@ -145,9 +145,9 @@
 			);
 			dependencies = (
 			);
-			name = MacStatusApp;
-			productName = MacStatusApp;
-			productReference = 10000000000000000000000E /* MacStatusApp.app */;
+			name = EasyBar;
+			productName = EasyBar;
+			productReference = 10000000000000000000000E /* EasyBar.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -165,7 +165,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 100000000000000000000700 /* Build configuration list for PBXProject "MacStatusApp" */;
+			buildConfigurationList = 100000000000000000000700 /* Build configuration list for PBXProject "EasyBar" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -178,7 +178,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				100000000000000000000401 /* MacStatusApp */,
+				100000000000000000000401 /* EasyBar */,
 			);
 		};
 /* End PBXProject section */
@@ -199,7 +199,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				100000000000000000000101 /* MacStatusApp.swift in Sources */,
+				100000000000000000000101 /* EasyBar.swift in Sources */,
 				100000000000000000000102 /* RunningAppInfo.swift in Sources */,
 				100000000000000000000103 /* ClockStore.swift in Sources */,
 				100000000000000000000104 /* RunningAppsStore.swift in Sources */,
@@ -256,21 +256,21 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Sources/MacStatusApp/Resources/MacStatus.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Sources/EasyBar/Resources/EasyBar.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = M3A6LK593A;
 				ENABLE_APP_SANDBOX = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Sources/MacStatusApp/Resources/Info.plist;
+				INFOPLIST_FILE = Sources/EasyBar/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				CURRENT_PROJECT_VERSION = 2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jiangcheng.MacStatusApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jiangcheng.EasyBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6.0;
 			};
@@ -280,21 +280,21 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Sources/MacStatusApp/Resources/MacStatus.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Sources/EasyBar/Resources/EasyBar.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = M3A6LK593A;
 				ENABLE_APP_SANDBOX = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Sources/MacStatusApp/Resources/Info.plist;
+				INFOPLIST_FILE = Sources/EasyBar/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				CURRENT_PROJECT_VERSION = 2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jiangcheng.MacStatusApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jiangcheng.EasyBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6.0;
 			};
@@ -303,7 +303,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		100000000000000000000700 /* Build configuration list for PBXProject "MacStatusApp" */ = {
+		100000000000000000000700 /* Build configuration list for PBXProject "EasyBar" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				100000000000000000000801 /* Debug */,
@@ -312,7 +312,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		100000000000000000000701 /* Build configuration list for PBXNativeTarget "MacStatusApp" */ = {
+		100000000000000000000701 /* Build configuration list for PBXNativeTarget "EasyBar" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				100000000000000000000803 /* Debug */,

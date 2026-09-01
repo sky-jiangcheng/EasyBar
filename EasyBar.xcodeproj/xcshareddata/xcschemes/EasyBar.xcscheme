@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "100000000000000000000401"
-               BuildableName = "MacStatusApp.app"
-               BlueprintName = "MacStatusApp"
-               ReferencedContainer = "container:MacStatusApp.xcodeproj">
+               BuildableName = "EasyBar.app"
+               BlueprintName = "EasyBar"
+               ReferencedContainer = "container:EasyBar.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -43,9 +43,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "100000000000000000000401"
-            BuildableName = "MacStatusApp.app"
-            BlueprintName = "MacStatusApp"
-            ReferencedContainer = "container:MacStatusApp.xcodeproj">
+            BuildableName = "EasyBar.app"
+            BlueprintName = "EasyBar"
+            ReferencedContainer = "container:EasyBar.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -60,9 +60,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "100000000000000000000401"
-            BuildableName = "MacStatusApp.app"
-            BlueprintName = "MacStatusApp"
-            ReferencedContainer = "container:MacStatusApp.xcodeproj">
+            BuildableName = "EasyBar.app"
+            BlueprintName = "EasyBar"
+            ReferencedContainer = "container:EasyBar.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

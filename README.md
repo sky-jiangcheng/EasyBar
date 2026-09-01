@@ -1,4 +1,4 @@
-# MacStatus
+# EasyBar
 
 A lightweight macOS dashboard for checking the current time and running apps.
 
@@ -24,6 +24,6 @@ A lightweight macOS dashboard for checking the current time and running apps.
 
 The app uses App Store-friendly APIs for the first version. It does not inspect windows, keystrokes, screen content, network traffic, or private process memory.
 
-Before App Store submission, build with full Xcode, configure your Apple Developer Team, enable App Sandbox, use `Sources/MacStatusApp/Resources/MacStatus.entitlements`, archive, validate, and upload through Organizer or Transporter.
+Before App Store submission, build with full Xcode, configure your Apple Developer Team, enable App Sandbox, use `Sources/EasyBar/Resources/EasyBar.entitlements`, archive, validate, and upload through Organizer or Transporter.
 
 Privacy policy page source: `docs/privacy/index.html`.
