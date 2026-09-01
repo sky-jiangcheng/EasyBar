@@ -5,32 +5,19 @@ import Observation
 @MainActor
 final class AccessibilityManager {
     var isAuthorized = false
-    var authorizationStatus: AuthorizationStatus = .notDetermined
     var showPermissionAlert = false
-
-    enum AuthorizationStatus: String {
-        case notDetermined = "Not Determined"
-        case denied = "Denied"
-        case authorized = "Authorized"
-        case restricted = "Restricted"
-    }
 
     init() {
         checkAuthorization()
     }
 
     func checkAuthorization() {
-        let trusted = AXIsProcessTrusted()
-        isAuthorized = trusted
-        authorizationStatus = trusted ? .authorized : .denied
+        isAuthorized = AXIsProcessTrusted()
     }
 
     func requestAuthorization() {
-        let trusted = AXIsProcessTrusted()
-        isAuthorized = trusted
-        authorizationStatus = trusted ? .authorized : .denied
-
-        if !trusted {
+        checkAuthorization()
+        if !isAuthorized {
             showPermissionAlert = true
         }
     }
@@ -43,80 +30,82 @@ final class AccessibilityManager {
     func hideMenuBarIcon(bundleIdentifier: String) -> Bool {
         guard isAuthorized else { return false }
 
-        let element = AXUIElementCreateSystemWide()
-        var appListRef: CFTypeRef?
-        let result = AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &appListRef)
+        let apps = NSWorkspace.shared.runningApplications.filter {
+            $0.bundleIdentifier == bundleIdentifier
+        }
 
-        guard result == .success, let appList = appListRef as? [AXUIElement] else {
+        guard let app = apps.first else { return false }
+
+        let axApp = AXUIElementCreateApplication(app.processIdentifier)
+        var menuBarRef: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(axApp, kAXMenuBarAttribute as CFString, &menuBarRef)
+
+        guard result == .success, let menuBar = menuBarRef as! AXUIElement? else {
             return false
         }
 
-        for appElement in appList {
-            var roleRef: CFTypeRef?
-            AXUIElementCopyAttributeValue(appElement, kAXRoleAttribute as CFString, &roleRef)
-
-            guard let role = roleRef as? String, role == kAXMenuBarRole as String else {
-                continue
-            }
-
-            var childrenRef: CFTypeRef?
-            AXUIElementCopyAttributeValue(appElement, kAXChildrenAttribute as CFString, &childrenRef)
-
-            guard let menuItems = childrenRef as? [AXUIElement] else {
-                continue
-            }
-
-            for menuItem in menuItems {
-                var titleRef: CFTypeRef?
-                AXUIElementCopyAttributeValue(menuItem, kAXTitleAttribute as CFString, &titleRef)
-
-                if let title = titleRef as? String, title == bundleIdentifier {
-                    AXUIElementSetAttributeValue(menuItem, kAXHiddenAttribute as CFString, true as CFTypeRef)
-                    return true
-                }
-            }
-        }
-
-        return false
+        return hideMenuItems(in: menuBar)
     }
 
     func showMenuBarIcon(bundleIdentifier: String) -> Bool {
         guard isAuthorized else { return false }
 
-        let element = AXUIElementCreateSystemWide()
-        var appListRef: CFTypeRef?
-        let result = AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &appListRef)
+        let apps = NSWorkspace.shared.runningApplications.filter {
+            $0.bundleIdentifier == bundleIdentifier
+        }
 
-        guard result == .success, let appList = appListRef as? [AXUIElement] else {
+        guard let app = apps.first else { return false }
+
+        let axApp = AXUIElementCreateApplication(app.processIdentifier)
+        var menuBarRef: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(axApp, kAXMenuBarAttribute as CFString, &menuBarRef)
+
+        guard result == .success, let menuBar = menuBarRef as! AXUIElement? else {
             return false
         }
 
-        for appElement in appList {
-            var roleRef: CFTypeRef?
-            AXUIElementCopyAttributeValue(appElement, kAXRoleAttribute as CFString, &roleRef)
+        return showMenuItems(in: menuBar)
+    }
 
-            guard let role = roleRef as? String, role == kAXMenuBarRole as String else {
-                continue
-            }
+    private func hideMenuItems(in element: AXUIElement) -> Bool {
+        var childrenRef: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &childrenRef)
 
-            var childrenRef: CFTypeRef?
-            AXUIElementCopyAttributeValue(appElement, kAXChildrenAttribute as CFString, &childrenRef)
-
-            guard let menuItems = childrenRef as? [AXUIElement] else {
-                continue
-            }
-
-            for menuItem in menuItems {
-                var titleRef: CFTypeRef?
-                AXUIElementCopyAttributeValue(menuItem, kAXTitleAttribute as CFString, &titleRef)
-
-                if let title = titleRef as? String, title == bundleIdentifier {
-                    AXUIElementSetAttributeValue(menuItem, kAXHiddenAttribute as CFString, false as CFTypeRef)
-                    return true
-                }
-            }
+        guard result == .success, let children = childrenRef as? [AXUIElement] else {
+            return false
         }
 
-        return false
+        var hidden = false
+        for child in children {
+            var roleRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(child, kAXRoleAttribute as CFString, &roleRef)
+
+            if let role = roleRef as? String, role == kAXMenuBarItemRole as String {
+                AXUIElementSetAttributeValue(child, kAXHiddenAttribute as CFString, true as CFTypeRef)
+                hidden = true
+            }
+        }
+        return hidden
+    }
+
+    private func showMenuItems(in element: AXUIElement) -> Bool {
+        var childrenRef: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &childrenRef)
+
+        guard result == .success, let children = childrenRef as? [AXUIElement] else {
+            return false
+        }
+
+        var shown = false
+        for child in children {
+            var roleRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(child, kAXRoleAttribute as CFString, &roleRef)
+
+            if let role = roleRef as? String, role == kAXMenuBarItemRole as String {
+                AXUIElementSetAttributeValue(child, kAXHiddenAttribute as CFString, false as CFTypeRef)
+                shown = true
+            }
+        }
+        return shown
     }
 }

@@ -16,7 +16,6 @@ final class MenuBarMonitor {
         let bundleIdentifier: String
         let processName: String
         var isHidden: Bool
-        var isTemporary: Bool
         let icon: NSImage?
 
         func hash(into hasher: inout Hasher) {
@@ -39,7 +38,8 @@ final class MenuBarMonitor {
 
         refreshMenuItems()
 
-        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        let interval = settingsStore.refreshInterval > 0 ? settingsStore.refreshInterval : 2.0
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.refreshMenuItems()
             }
@@ -54,7 +54,7 @@ final class MenuBarMonitor {
 
     func refreshMenuItems() {
         let items = getMenuItemsFromRunningApps()
-        let hiddenIDs = Set(menuBarItems.filter { $0.isHidden }.map { $0.id })
+        let hiddenIDs = settingsStore.hiddenBundleIDs
 
         menuBarItems = items.map { item in
             var mutableItem = item
@@ -81,7 +81,6 @@ final class MenuBarMonitor {
                 bundleIdentifier: bundleID,
                 processName: name,
                 isHidden: false,
-                isTemporary: false,
                 icon: app.icon
             )
             items.append(item)
@@ -93,6 +92,7 @@ final class MenuBarMonitor {
     func hideItem(_ item: MenuBarItem) {
         guard let index = menuBarItems.firstIndex(where: { $0.id == item.id }) else { return }
         menuBarItems[index].isHidden = true
+        settingsStore.toggleHidden(bundleID: item.bundleIdentifier)
 
         if accessibilityManager.isAuthorized {
             _ = accessibilityManager.hideMenuBarIcon(bundleIdentifier: item.bundleIdentifier)
@@ -102,7 +102,7 @@ final class MenuBarMonitor {
     func showItem(_ item: MenuBarItem) {
         guard let index = menuBarItems.firstIndex(where: { $0.id == item.id }) else { return }
         menuBarItems[index].isHidden = false
-        menuBarItems[index].isTemporary = false
+        settingsStore.toggleHidden(bundleID: item.bundleIdentifier)
 
         if accessibilityManager.isAuthorized {
             _ = accessibilityManager.showMenuBarIcon(bundleIdentifier: item.bundleIdentifier)
@@ -112,7 +112,6 @@ final class MenuBarMonitor {
     func showTemporarily(_ item: MenuBarItem) {
         guard let index = menuBarItems.firstIndex(where: { $0.id == item.id }) else { return }
         menuBarItems[index].isHidden = false
-        menuBarItems[index].isTemporary = true
 
         if accessibilityManager.isAuthorized {
             _ = accessibilityManager.showMenuBarIcon(bundleIdentifier: item.bundleIdentifier)
@@ -123,14 +122,15 @@ final class MenuBarMonitor {
 
     private func scheduleAutoHide(for item: MenuBarItem) {
         let delay = settingsStore.autoHideDelay
+        guard delay > 0 else { return }
+
         Task {
             try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled else { return }
 
             if let index = menuBarItems.firstIndex(where: { $0.id == item.id }),
-               menuBarItems[index].isTemporary {
+               !menuBarItems[index].isHidden {
                 menuBarItems[index].isHidden = true
-                menuBarItems[index].isTemporary = false
 
                 if accessibilityManager.isAuthorized {
                     _ = accessibilityManager.hideMenuBarIcon(bundleIdentifier: item.bundleIdentifier)

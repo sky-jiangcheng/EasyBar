@@ -12,6 +12,20 @@ struct ContentView: View {
             detailView
         }
         .frame(minWidth: 700, minHeight: 450)
+        .alert("Accessibility Permission Required", isPresented: Binding(
+            get: { accessibilityManager.showPermissionAlert },
+            set: { accessibilityManager.showPermissionAlert = $0 }
+        )) {
+            Button("Cancel") {
+                accessibilityManager.showPermissionAlert = false
+            }
+            Button("Open Settings") {
+                accessibilityManager.openAccessibilitySettings()
+                accessibilityManager.showPermissionAlert = false
+            }
+        } message: {
+            Text("EasyBar needs Accessibility permission to manage menu bar icons.")
+        }
     }
 
     private var sidebar: some View {

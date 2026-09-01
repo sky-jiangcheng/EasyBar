@@ -1,9 +1,6 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("launchAtLogin") private var launchAtLogin = false
-    @AppStorage("selectedMode") private var selectedMode = "aggregation"
-
     @Environment(SettingsStore.self) private var settings
     @Environment(MenuBarMonitor.self) private var menuBarMonitor
 
@@ -57,7 +54,6 @@ struct SettingsView: View {
 }
 
 struct GeneralSettingsTab: View {
-    @AppStorage("launchAtLogin") private var launchAtLogin = false
     @Binding var aggregationMode: SettingsStore.AggregationMode
     @Binding var refreshInterval: TimeInterval
 
@@ -72,14 +68,6 @@ struct GeneralSettingsTab: View {
                 .pickerStyle(.segmented)
 
                 Text(modeDescription)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section("Startup") {
-                Toggle("Launch at Login", isOn: $launchAtLogin)
-                    .disabled(true)
-                Text("Launch at Login is reserved for the signed App Store build.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -179,8 +167,14 @@ struct IconManagementTab: View {
                         Spacer()
 
                         Toggle("", isOn: Binding(
-                            get: { !settings.isHidden(bundleID: item.bundleIdentifier) },
-                            set: { _ in settings.toggleHidden(bundleID: item.bundleIdentifier) }
+                            get: { item.isHidden },
+                            set: { _ in
+                                if item.isHidden {
+                                    menuBarMonitor.showItem(item)
+                                } else {
+                                    menuBarMonitor.hideItem(item)
+                                }
+                            }
                         ))
                         .toggleStyle(.switch)
                         .controlSize(.small)

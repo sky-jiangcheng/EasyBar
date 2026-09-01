@@ -6,24 +6,25 @@ final class StatusBarManager {
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
     private var eventMonitor: Any?
-
     private let aggregationPanel: AggregationPanel
+
     private let menuBarMonitor: MenuBarMonitor
     private let settingsStore: SettingsStore
     private let accessibilityManager: AccessibilityManager
 
-    init(aggregationPanel: AggregationPanel, menuBarMonitor: MenuBarMonitor, settingsStore: SettingsStore, accessibilityManager: AccessibilityManager) {
-        self.aggregationPanel = aggregationPanel
+    init(menuBarMonitor: MenuBarMonitor, settingsStore: SettingsStore, accessibilityManager: AccessibilityManager) {
         self.menuBarMonitor = menuBarMonitor
         self.settingsStore = settingsStore
         self.accessibilityManager = accessibilityManager
+        self.aggregationPanel = AggregationPanel(
+            menuBarMonitor: menuBarMonitor,
+            settingsStore: settingsStore
+        )
 
         setupStatusItem()
         setupPopover()
         setupEventMonitor()
     }
-
-    deinit {}
 
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -34,12 +35,12 @@ final class StatusBarManager {
         button.image = icon
         button.toolTip = "EasyBar - Menu Bar Manager"
 
-        button.action = #selector(togglePopover(_:))
+        button.action = #selector(statusBarButtonClicked(_:))
         button.target = self
     }
 
     private func setupPopover() {
-        popover.contentSize = NSSize(width: 420, height: 300)
+        popover.contentSize = NSSize(width: 360, height: 400)
         popover.behavior = .transient
         popover.animates = true
 
@@ -69,7 +70,7 @@ final class StatusBarManager {
         }
     }
 
-    @objc private func togglePopover(_ sender: AnyObject?) {
+    @objc private func statusBarButtonClicked(_ sender: AnyObject?) {
         if popover.isShown {
             closePopover()
         } else {
@@ -79,9 +80,7 @@ final class StatusBarManager {
 
     private func showPopover() {
         guard let button = statusItem?.button else { return }
-
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-
         NSApp.activate(ignoringOtherApps: true)
     }
 
