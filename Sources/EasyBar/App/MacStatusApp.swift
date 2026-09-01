@@ -8,6 +8,14 @@ struct EasyBarApp: App {
     @State private var accessibilityManager = AccessibilityManager()
 
     var body: some Scene {
+        Window("EasyBar", id: "main") {
+            ContentView()
+                .environment(settingsStore)
+                .environment(appDelegate.menuBarMonitor)
+                .environment(accessibilityManager)
+        }
+        .defaultSize(width: 520, height: 480)
+
         Settings {
             SettingsView()
                 .environment(settingsStore)
@@ -33,8 +41,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     )
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory)
-
         aggregationPanel = AggregationPanel(
             menuBarMonitor: menuBarMonitor,
             settingsStore: settingsStore
