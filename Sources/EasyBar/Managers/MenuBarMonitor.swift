@@ -125,6 +125,8 @@ final class MenuBarMonitor {
         if accessibilityManager.isAuthorized {
             _ = accessibilityManager.hideMenuBarIcon(bundleIdentifier: item.bundleIdentifier)
         }
+
+        NotificationCenter.default.post(name: .aggregationShouldShow, object: nil)
     }
 
     func showItem(_ item: MenuBarItem) {
@@ -173,4 +175,5 @@ final class MenuBarMonitor {
 
 extension Notification.Name {
     static let refreshIntervalChanged = Notification.Name("refreshIntervalChanged")
+    static let aggregationShouldShow = Notification.Name("aggregationShouldShow")
 }

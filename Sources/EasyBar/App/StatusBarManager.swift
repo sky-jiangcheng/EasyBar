@@ -24,6 +24,7 @@ final class StatusBarManager {
         setupStatusItem()
         setupPopover()
         setupEventMonitor()
+        setupNotifications()
     }
 
     private func setupStatusItem() {
@@ -37,6 +38,7 @@ final class StatusBarManager {
 
         button.action = #selector(statusBarButtonClicked(_:))
         button.target = self
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
     }
 
     private func setupPopover() {
@@ -70,12 +72,85 @@ final class StatusBarManager {
         }
     }
 
-    @objc private func statusBarButtonClicked(_ sender: AnyObject?) {
-        if popover.isShown {
-            closePopover()
-        } else {
-            showPopover()
+    private func setupNotifications() {
+        NotificationCenter.default.addObserver(
+            forName: .aggregationShouldShow,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.settingsStore.aggregationMode == .aggregation else { return }
+                if !self.aggregationPanel.isShown {
+                    self.aggregationPanel.show()
+                }
+            }
         }
+    }
+
+    @objc private func statusBarButtonClicked(_ sender: AnyObject?) {
+        guard let event = NSApp.currentEvent else { return }
+
+        if event.type == .rightMouseUp {
+            showContextMenu()
+        } else {
+            if popover.isShown {
+                closePopover()
+            } else {
+                showPopover()
+            }
+        }
+    }
+
+    private func showContextMenu() {
+        let menu = NSMenu()
+
+        let panelItem = NSMenuItem(
+            title: aggregationPanel.isShown ? "Hide Aggregation Panel" : "Show Aggregation Panel",
+            action: #selector(toggleAggregationPanel),
+            keyEquivalent: ""
+        )
+        panelItem.target = self
+        menu.addItem(panelItem)
+
+        menu.addItem(.separator())
+
+        let settingsItem = NSMenuItem(
+            title: "Settings...",
+            action: #selector(openSettings),
+            keyEquivalent: ","
+        )
+        settingsItem.target = self
+        menu.addItem(settingsItem)
+
+        menu.addItem(.separator())
+
+        let quitItem = NSMenuItem(
+            title: "Quit EasyBar",
+            action: #selector(quitApp),
+            keyEquivalent: "q"
+        )
+        quitItem.target = self
+        menu.addItem(quitItem)
+
+        statusItem?.menu = menu
+        statusItem?.button?.performClick(nil)
+        statusItem?.menu = nil
+    }
+
+    @objc private func toggleAggregationPanel() {
+        aggregationPanel.toggle()
+    }
+
+    @objc private func openSettings() {
+        if #available(macOS 14.0, *) {
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        } else {
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: NSApp, from: nil)
+        }
+    }
+
+    @objc private func quitApp() {
+        NSApp.terminate(nil)
     }
 
     private func showPopover() {

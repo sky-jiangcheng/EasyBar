@@ -37,7 +37,7 @@ struct AggregationView: View {
 
     private var iconGrid: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
+            HStack(spacing: settings.iconSpacing.value) {
                 ForEach(hiddenItems) { item in
                     IconButton(
                         item: item,
