@@ -79,7 +79,7 @@ final class AggregationPanel {
     private func positionPanel(_ panel: NSPanel) {
         guard let screen = NSScreen.main else { return }
 
-        let menuBarHeight: CGFloat = 28
+        let menuBarHeight = NSStatusBar.system.thickness
         let x = screen.frame.midX - panel.frame.width / 2
         let y = screen.frame.maxY - menuBarHeight - panel.frame.height - 4
 

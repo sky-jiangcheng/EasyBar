@@ -6,7 +6,7 @@ import Observation
 final class SettingsStore {
     var aggregationMode: AggregationMode = .aggregation
     var aggregationIcon: AggregationIconType = .dots
-    var autoHideDelay: TimeInterval = 5.0
+    var autoHideDelay: TimeInterval? = 5.0
     var refreshInterval: TimeInterval = 2.0
     var iconSpacing: IconSpacing = .default
     var hiddenBundleIDs: Set<String> = []
@@ -67,21 +67,36 @@ final class SettingsStore {
     func load() {
         aggregationMode = AggregationMode(rawValue: defaults.string(forKey: "aggregationMode") ?? "") ?? .aggregation
         aggregationIcon = AggregationIconType(rawValue: defaults.string(forKey: "aggregationIcon") ?? "") ?? .dots
-        autoHideDelay = defaults.double(forKey: "autoHideDelay") > 0 ? defaults.double(forKey: "autoHideDelay") : 5.0
-        refreshInterval = defaults.double(forKey: "refreshInterval") > 0 ? defaults.double(forKey: "refreshInterval") : 2.0
         iconSpacing = IconSpacing(rawValue: defaults.string(forKey: "iconSpacing") ?? "") ?? .default
         hiddenBundleIDs = Set(defaults.stringArray(forKey: "hiddenBundleIDs") ?? [])
         customOrder = defaults.stringArray(forKey: "customOrder") ?? []
+
+        if defaults.bool(forKey: "autoHideDelay_never") {
+            autoHideDelay = nil
+        } else {
+            let stored = defaults.double(forKey: "autoHideDelay")
+            autoHideDelay = stored > 0 ? stored : 5.0
+        }
+
+        let storedRefresh = defaults.double(forKey: "refreshInterval")
+        refreshInterval = storedRefresh > 0 ? storedRefresh : 2.0
     }
 
     func save() {
         defaults.set(aggregationMode.rawValue, forKey: "aggregationMode")
         defaults.set(aggregationIcon.rawValue, forKey: "aggregationIcon")
-        defaults.set(autoHideDelay, forKey: "autoHideDelay")
         defaults.set(refreshInterval, forKey: "refreshInterval")
         defaults.set(iconSpacing.rawValue, forKey: "iconSpacing")
         defaults.set(Array(hiddenBundleIDs), forKey: "hiddenBundleIDs")
         defaults.set(customOrder, forKey: "customOrder")
+
+        if let delay = autoHideDelay {
+            defaults.set(delay, forKey: "autoHideDelay")
+            defaults.set(false, forKey: "autoHideDelay_never")
+        } else {
+            defaults.removeObject(forKey: "autoHideDelay")
+            defaults.set(true, forKey: "autoHideDelay_never")
+        }
     }
 
     func toggleHidden(bundleID: String) {

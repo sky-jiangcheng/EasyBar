@@ -132,7 +132,11 @@ struct PopoverView: View {
             Spacer()
 
             Button("Settings...") {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                if #available(macOS 14.0, *) {
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                } else {
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: NSApp, from: nil)
+                }
             }
             .buttonStyle(.plain)
             .font(.caption)

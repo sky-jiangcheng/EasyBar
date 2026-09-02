@@ -8,6 +8,7 @@ final class MenuBarMonitor {
     var isMonitoring = false
 
     private var timer: Timer?
+    private var refreshObserver: Any?
     private let accessibilityManager: AccessibilityManager
     private let settingsStore: SettingsStore
 
@@ -37,7 +38,31 @@ final class MenuBarMonitor {
         isMonitoring = true
 
         refreshMenuItems()
+        startTimer()
 
+        refreshObserver = NotificationCenter.default.addObserver(
+            forName: .refreshIntervalChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.restartTimer()
+            }
+        }
+    }
+
+    func stopMonitoring() {
+        timer?.invalidate()
+        timer = nil
+        if let observer = refreshObserver {
+            NotificationCenter.default.removeObserver(observer)
+            refreshObserver = nil
+        }
+        isMonitoring = false
+    }
+
+    private func startTimer() {
+        timer?.invalidate()
         let interval = settingsStore.refreshInterval > 0 ? settingsStore.refreshInterval : 2.0
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor in
@@ -46,10 +71,9 @@ final class MenuBarMonitor {
         }
     }
 
-    func stopMonitoring() {
-        timer?.invalidate()
-        timer = nil
-        isMonitoring = false
+    private func restartTimer() {
+        guard isMonitoring else { return }
+        startTimer()
     }
 
     func refreshMenuItems() {
@@ -92,7 +116,11 @@ final class MenuBarMonitor {
     func hideItem(_ item: MenuBarItem) {
         guard let index = menuBarItems.firstIndex(where: { $0.id == item.id }) else { return }
         menuBarItems[index].isHidden = true
-        settingsStore.toggleHidden(bundleID: item.bundleIdentifier)
+
+        if !settingsStore.hiddenBundleIDs.contains(item.bundleIdentifier) {
+            settingsStore.hiddenBundleIDs.insert(item.bundleIdentifier)
+            settingsStore.save()
+        }
 
         if accessibilityManager.isAuthorized {
             _ = accessibilityManager.hideMenuBarIcon(bundleIdentifier: item.bundleIdentifier)
@@ -102,7 +130,11 @@ final class MenuBarMonitor {
     func showItem(_ item: MenuBarItem) {
         guard let index = menuBarItems.firstIndex(where: { $0.id == item.id }) else { return }
         menuBarItems[index].isHidden = false
-        settingsStore.toggleHidden(bundleID: item.bundleIdentifier)
+
+        if settingsStore.hiddenBundleIDs.contains(item.bundleIdentifier) {
+            settingsStore.hiddenBundleIDs.remove(item.bundleIdentifier)
+            settingsStore.save()
+        }
 
         if accessibilityManager.isAuthorized {
             _ = accessibilityManager.showMenuBarIcon(bundleIdentifier: item.bundleIdentifier)
@@ -121,8 +153,7 @@ final class MenuBarMonitor {
     }
 
     private func scheduleAutoHide(for item: MenuBarItem) {
-        let delay = settingsStore.autoHideDelay
-        guard delay > 0 else { return }
+        guard let delay = settingsStore.autoHideDelay, delay > 0 else { return }
 
         Task {
             try? await Task.sleep(for: .seconds(delay))
@@ -138,4 +169,8 @@ final class MenuBarMonitor {
             }
         }
     }
+}
+
+extension Notification.Name {
+    static let refreshIntervalChanged = Notification.Name("refreshIntervalChanged")
 }

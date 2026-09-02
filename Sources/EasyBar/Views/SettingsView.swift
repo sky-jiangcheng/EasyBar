@@ -13,7 +13,11 @@ struct SettingsView: View {
                 ),
                 refreshInterval: Binding(
                     get: { settings.refreshInterval },
-                    set: { settings.refreshInterval = $0; settings.save() }
+                    set: {
+                        settings.refreshInterval = $0
+                        settings.save()
+                        NotificationCenter.default.post(name: .refreshIntervalChanged, object: nil)
+                    }
                 )
             )
             .tabItem {
@@ -102,7 +106,7 @@ struct GeneralSettingsTab: View {
 
 struct AggregationSettingsTab: View {
     @Binding var aggregationIcon: SettingsStore.AggregationIconType
-    @Binding var autoHideDelay: TimeInterval
+    @Binding var autoHideDelay: TimeInterval?
 
     var body: some View {
         Form {
@@ -115,11 +119,11 @@ struct AggregationSettingsTab: View {
                     Text("Delay before hiding")
                     Spacer()
                     Picker("", selection: $autoHideDelay) {
-                        Text("2s").tag(2.0)
-                        Text("5s").tag(5.0)
-                        Text("10s").tag(10.0)
-                        Text("30s").tag(30.0)
-                        Text("Never").tag(-1.0)
+                        Text("2s").tag(TimeInterval?(2.0))
+                        Text("5s").tag(TimeInterval?(5.0))
+                        Text("10s").tag(TimeInterval?(10.0))
+                        Text("30s").tag(TimeInterval?(30.0))
+                        Text("Never").tag(TimeInterval?(nil) as TimeInterval?)
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 280)
