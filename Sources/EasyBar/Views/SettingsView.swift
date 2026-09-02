@@ -52,11 +52,6 @@ struct SettingsView: View {
             .tabItem {
                 Label("Order", systemImage: "arrow.up.arrow.down")
             }
-
-            DebugTab()
-                .tabItem {
-                    Label("Debug", systemImage: "ladybug")
-                }
         }
         .formStyle(.grouped)
     }
@@ -206,52 +201,6 @@ struct IconOrderTab: View {
                 customOrder: $customOrder,
                 menuBarItems: menuBarMonitor.menuBarItems
             )
-        }
-    }
-}
-
-struct DebugTab: View {
-    @Environment(AccessibilityManager.self) private var accessibilityManager
-    @State private var logOutput = ""
-
-    var body: some View {
-        Form {
-            Section("Accessibility Debug") {
-                Button("Dump AX Tree (see Console.app)") {
-                    accessibilityManager.dumpAXTree()
-                    logOutput = "AX tree dumped to Console.app"
-                }
-
-                Button("Test Hide First App") {
-                    if let firstApp = NSWorkspace.shared.runningApplications.first(where: {
-                        $0.activationPolicy == .regular && $0.bundleIdentifier != Bundle.main.bundleIdentifier
-                    }) {
-                        let success = accessibilityManager.hideMenuBarIcon(bundleIdentifier: firstApp.bundleIdentifier ?? "")
-                        logOutput = "Hide \(firstApp.localizedName ?? "?"): \(success ? "OK" : "FAILED")"
-                    }
-                }
-
-                Button("Test Show First App") {
-                    if let firstApp = NSWorkspace.shared.runningApplications.first(where: {
-                        $0.activationPolicy == .regular && $0.bundleIdentifier != Bundle.main.bundleIdentifier
-                    }) {
-                        let success = accessibilityManager.showMenuBarIcon(bundleIdentifier: firstApp.bundleIdentifier ?? "")
-                        logOutput = "Show \(firstApp.localizedName ?? "?"): \(success ? "OK" : "FAILED")"
-                    }
-                }
-
-                if !logOutput.isEmpty {
-                    Text(logOutput)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Section("System Info") {
-                LabeledContent("AX Trusted", value: accessibilityManager.isAuthorized ? "Yes" : "No")
-                LabeledContent("macOS Version", value: ProcessInfo.processInfo.operatingSystemVersionString)
-                LabeledContent("Running Apps", value: "\(NSWorkspace.shared.runningApplications.filter { $0.activationPolicy == .regular }.count)")
-            }
         }
     }
 }

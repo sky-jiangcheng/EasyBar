@@ -9,7 +9,6 @@ final class MenuBarMonitor {
 
     private var timer: Timer?
     private var refreshObserver: Any?
-    private let accessibilityManager: AccessibilityManager
     private let settingsStore: SettingsStore
 
     struct MenuBarItem: Identifiable, Hashable {
@@ -28,8 +27,7 @@ final class MenuBarMonitor {
         }
     }
 
-    init(accessibilityManager: AccessibilityManager, settingsStore: SettingsStore) {
-        self.accessibilityManager = accessibilityManager
+    init(settingsStore: SettingsStore) {
         self.settingsStore = settingsStore
     }
 
@@ -122,10 +120,6 @@ final class MenuBarMonitor {
             settingsStore.save()
         }
 
-        if accessibilityManager.isAuthorized {
-            _ = accessibilityManager.hideMenuBarIcon(bundleIdentifier: item.bundleIdentifier)
-        }
-
         NotificationCenter.default.post(name: .aggregationShouldShow, object: nil)
     }
 
@@ -137,19 +131,11 @@ final class MenuBarMonitor {
             settingsStore.hiddenBundleIDs.remove(item.bundleIdentifier)
             settingsStore.save()
         }
-
-        if accessibilityManager.isAuthorized {
-            _ = accessibilityManager.showMenuBarIcon(bundleIdentifier: item.bundleIdentifier)
-        }
     }
 
     func showTemporarily(_ item: MenuBarItem) {
         guard let index = menuBarItems.firstIndex(where: { $0.id == item.id }) else { return }
         menuBarItems[index].isHidden = false
-
-        if accessibilityManager.isAuthorized {
-            _ = accessibilityManager.showMenuBarIcon(bundleIdentifier: item.bundleIdentifier)
-        }
 
         scheduleAutoHide(for: item)
     }
@@ -164,10 +150,6 @@ final class MenuBarMonitor {
             if let index = menuBarItems.firstIndex(where: { $0.id == item.id }),
                !menuBarItems[index].isHidden {
                 menuBarItems[index].isHidden = true
-
-                if accessibilityManager.isAuthorized {
-                    _ = accessibilityManager.hideMenuBarIcon(bundleIdentifier: item.bundleIdentifier)
-                }
             }
         }
     }

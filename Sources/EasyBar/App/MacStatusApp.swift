@@ -34,7 +34,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     let accessibilityManager = AccessibilityManager()
 
     private(set) lazy var menuBarMonitor = MenuBarMonitor(
-        accessibilityManager: accessibilityManager,
         settingsStore: settingsStore
     )
 
