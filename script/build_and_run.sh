@@ -2,8 +2,8 @@
 set -euo pipefail
 
 MODE="${1:-run}"
-APP_NAME="EasyBar"
-BUNDLE_ID="com.jiangcheng.EasyBar"
+APP_NAME="StatusBar Pro"
+BUNDLE_ID="com.jiangcheng.MacStatusApp"
 MIN_SYSTEM_VERSION="14.0"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -14,7 +14,7 @@ APP_MACOS="$APP_CONTENTS/MacOS"
 APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
-ENTITLEMENTS="$ROOT_DIR/Sources/EasyBar/Resources/EasyBar.entitlements"
+ENTITLEMENTS="$ROOT_DIR/Sources/StatusBar Pro/Resources/EasyBar.entitlements"
 
 export SWIFTPM_HOME="$ROOT_DIR/.build/swiftpm-home"
 export CLANG_MODULE_CACHE_PATH="$ROOT_DIR/.build/clang-module-cache"
@@ -39,9 +39,9 @@ cat >"$INFO_PLIST" <<PLIST
   <key>CFBundleIdentifier</key>
   <string>$BUNDLE_ID</string>
   <key>CFBundleName</key>
-  <string>EasyBar</string>
+  <string>$APP_NAME</string>
   <key>CFBundleDisplayName</key>
-  <string>EasyBar</string>
+  <string>$APP_NAME</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>

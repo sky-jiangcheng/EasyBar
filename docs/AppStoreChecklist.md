@@ -16,7 +16,7 @@
 2. 打开 `StatusBar Pro.xcodeproj`
 3. 使用 Apple Developer 账户登录 Xcode
 4. 选择 `StatusBar Pro` target，在 Signing & Capabilities 中选择你的 Team
-5. 为 `com.jiangcheng.StatusBar Pro` 创建 Apple Developer App ID（或更新 bundle identifier）
+5. 为 `com.jiangcheng.MacStatusApp` 创建 Apple Developer App ID（或更新 bundle identifier）
 6. 保持 Automatically manage signing 启用，让 Xcode 自动创建 provisioning profile
 7. 确认 App Sandbox 已通过 `Sources/StatusBar Pro/Resources/StatusBar Pro.entitlements` 启用
 8. 配置 Mac App Store 发布证书和 provisioning profile
@@ -35,7 +35,7 @@
 - Xcode Release 归档成功
 - App Store Connect 导出成功，生成 `build/export/StatusBar Pro.pkg`
 - 导出包使用 `Cloud Managed Apple Distribution`
-- 导出 app 使用 `Team Store Provisioning Profile: com.jiangcheng.StatusBar Pro`
+- 导出 app 使用 `Team Store Provisioning Profile: com.jiangcheng.MacStatusApp`
 - App Store Connect 上传成功，包正在处理中
 
 ## 创建 App Store Connect App 记录
@@ -44,7 +44,7 @@
 
 - Platform: macOS
 - Name: StatusBar Pro
-- Bundle ID: `com.jiangcheng.StatusBar Pro`
+- Bundle ID: `com.jiangcheng.MacStatusApp`
 - SKU: `easybar-001`
 - User Access: Full Access
 

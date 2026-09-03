@@ -117,7 +117,7 @@ GitHub Actions 自动构建、签名并上传到 App Store。
 | `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID |
 | `APP_STORE_CONNECT_API_KEY` | `.p8` 私钥内容（base64） |
 
-- **可选变量**：`BUNDLE_ID`（默认 `com.jiangcheng.EasyBar`）。
+- **可选变量**：`BUNDLE_ID`（默认 `com.jiangcheng.MacStatusApp`）。
 
 发布：
 
