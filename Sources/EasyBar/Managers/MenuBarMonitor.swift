@@ -181,6 +181,10 @@ final class MenuBarMonitor {
         app.unhide()
         app.activate()
     }
+
+    func canActivateApp(_ item: MenuBarItem) -> Bool {
+        item.appType == .dockOnly
+    }
 }
 
 extension Notification.Name {

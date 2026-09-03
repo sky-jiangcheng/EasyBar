@@ -174,15 +174,22 @@ private struct IconRow: View {
             Spacer()
 
             HStack(spacing: 8) {
-                Button {
-                    menuBarMonitor.activateApp(item)
-                } label: {
-                    Image(systemName: "arrow.up.forward.app")
+                if menuBarMonitor.canActivateApp(item) {
+                    Button {
+                        menuBarMonitor.activateApp(item)
+                    } label: {
+                        Image(systemName: "arrow.up.forward.app")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Open")
+                } else {
+                    Image(systemName: "exclamationmark.circle")
                         .font(.caption)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.orange)
+                        .help("Status Bar app - cannot be activated")
                 }
-                .buttonStyle(.plain)
-                .help("Open")
 
                 Button {
                     menuBarMonitor.quitApp(item)
