@@ -206,10 +206,10 @@ struct ContentView: View {
             }
 
             StatCard(
-                title: "Running",
-                value: "\(menuBarMonitor.menuBarItems.filter { !$0.isBackground }.count)",
-                icon: "app.badge.checkmark",
-                color: .green,
+                title: "Background",
+                value: "\(menuBarMonitor.menuBarItems.filter { $0.isBackground }.count)",
+                icon: "后台运行",
+                color: .secondary,
                 isSelected: false
             ) {
                 withAnimation { selectedTab = .all }
