@@ -6,33 +6,38 @@ struct PopoverView: View {
     @Environment(SettingsStore.self) private var settings
 
     @State private var searchText = ""
+    @State private var selectedFilter: FilterType = .all
 
     let onDismiss: () -> Void
+
+    enum FilterType: String, CaseIterable {
+        case all = "All"
+        case status = "Status Bar"
+        case hidden = "Hidden"
+    }
 
     private var allItems: [MenuBarMonitor.MenuBarItem] {
         menuBarMonitor.menuBarItems
     }
 
     private var filteredItems: [MenuBarMonitor.MenuBarItem] {
-        guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return allItems
+        let items: [MenuBarMonitor.MenuBarItem]
+        switch selectedFilter {
+        case .all:
+            items = allItems
+        case .status:
+            items = allItems.filter { $0.hasStatusBar }
+        case .hidden:
+            items = allItems.filter { $0.isHidden }
         }
-        return allItems.filter { item in
+
+        guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return items
+        }
+        return items.filter { item in
             item.processName.localizedCaseInsensitiveContains(searchText)
                 || item.bundleIdentifier.localizedCaseInsensitiveContains(searchText)
         }
-    }
-
-    private var statusItems: [MenuBarMonitor.MenuBarItem] {
-        filteredItems.filter { $0.hasStatusBar }
-    }
-
-    private var backgroundItems: [MenuBarMonitor.MenuBarItem] {
-        filteredItems.filter { $0.isBackground && !$0.hasStatusBar }
-    }
-
-    private var foregroundItems: [MenuBarMonitor.MenuBarItem] {
-        filteredItems.filter { !$0.isBackground && !$0.hasStatusBar }
     }
 
     var body: some View {
@@ -41,7 +46,7 @@ struct PopoverView: View {
 
             Divider()
 
-            searchBar
+            filterBar
 
             Divider()
 
@@ -51,15 +56,15 @@ struct PopoverView: View {
 
             footerSection
         }
-        .frame(width: 360, height: 480)
+        .frame(width: 380, height: 500)
     }
 
     private var headerSection: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Menu Bar Icons")
+                Text("EasyBar")
                     .font(.headline)
-                Text("\(menuBarMonitor.menuBarItems.filter { $0.isHidden }.count) hidden")
+                Text("\(menuBarMonitor.menuBarItems.count) apps")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -81,26 +86,35 @@ struct PopoverView: View {
         .padding(.vertical, 12)
     }
 
-    private var searchBar: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-            TextField("Search icons...", text: $searchText)
-                .textFieldStyle(.plain)
+    private var filterBar: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                TextField("Search...", text: $searchText)
+                    .textFieldStyle(.plain)
 
-            if !searchText.isEmpty {
-                Button {
-                    searchText = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
+
+            Picker("Filter", selection: $selectedFilter) {
+                ForEach(FilterType.allCases, id: \.self) { filter in
+                    Text(filter.rawValue).tag(filter)
+                }
+            }
+            .pickerStyle(.segmented)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
     }
@@ -109,56 +123,21 @@ struct PopoverView: View {
         VStack(spacing: 0) {
             if filteredItems.isEmpty {
                 ContentUnavailableView(
-                    "No Icons",
-                    systemImage: "menubar.rectangle",
-                    description: Text("No menu bar icons found.")
+                    "No Apps",
+                    systemImage: "app.badge",
+                    description: Text("No apps found.")
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0) {
-                        if !statusItems.isEmpty {
-                            sectionHeader(title: "Status Bar", icon: "menubar.rectangle", count: statusItems.count)
-                            ForEach(statusItems) { item in
-                                IconRow(item: item)
-                            }
-                        }
-
-                        if !foregroundItems.isEmpty {
-                            sectionHeader(title: "Foreground", icon: "macwindow", count: foregroundItems.count)
-                            ForEach(foregroundItems) { item in
-                                IconRow(item: item)
-                            }
-                        }
-
-                        if !backgroundItems.isEmpty {
-                            sectionHeader(title: "Background", icon: "后台运行", count: backgroundItems.count)
-                            ForEach(backgroundItems) { item in
-                                IconRow(item: item)
-                            }
+                        ForEach(filteredItems) { item in
+                            IconRow(item: item)
                         }
                     }
                 }
             }
         }
-    }
-
-    private func sectionHeader(title: String, icon: String, count: Int) -> some View {
-        HStack {
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text("(\(count))")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
-        .background(.quaternary.opacity(0.3))
     }
 
     private var footerSection: some View {
@@ -219,12 +198,12 @@ private struct IconRow: View {
                     .foregroundStyle(.primary)
                 HStack(spacing: 4) {
                     if item.hasStatusBar {
-                        Image(systemName: "menubar.rectangle")
+                        Label("Status", systemImage: "menubar.rectangle")
                             .font(.caption2)
                             .foregroundStyle(.blue)
                     }
                     if item.isBackground {
-                        Image(systemName: "后台运行")
+                        Label("BG", systemImage: "后台运行")
                             .font(.caption2)
                             .foregroundStyle(.purple)
                     }
@@ -277,7 +256,7 @@ private struct IconRow: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 6)
+        .padding(.vertical, 8)
         .contentShape(Rectangle())
         .background(item.isHidden ? Color.orange.opacity(0.05) : Color.clear)
     }
