@@ -8,18 +8,31 @@ struct ContentView: View {
     @State private var selectedTab: SidebarTab = .all
 
     enum SidebarTab: String, CaseIterable {
-        case all = "All Apps"
+        case all = "All"
         case status = "Status Bar"
         case hidden = "Hidden"
     }
 
-    var body: some View {
-        NavigationSplitView {
-            sidebar
-        } detail: {
-            detailView
+    private var filteredItems: [MenuBarMonitor.MenuBarItem] {
+        switch selectedTab {
+        case .all:
+            menuBarMonitor.menuBarItems
+        case .status:
+            menuBarMonitor.menuBarItems.filter { $0.hasStatusBar }
+        case .hidden:
+            menuBarMonitor.menuBarItems.filter { $0.isHidden }
         }
-        .frame(minWidth: 800, minHeight: 500)
+    }
+
+    var body: some View {
+        HSplitView {
+            sidebar
+                .frame(minWidth: 260, idealWidth: 300, maxWidth: 360)
+
+            detailView
+                .frame(minWidth: 400, idealWidth: 500)
+        }
+        .frame(minWidth: 700, minHeight: 500)
         .alert("Accessibility Permission Required", isPresented: Binding(
             get: { accessibilityManager.showPermissionAlert },
             set: { accessibilityManager.showPermissionAlert = $0 }
@@ -38,77 +51,77 @@ struct ContentView: View {
 
     private var sidebar: some View {
         VStack(spacing: 0) {
+            sidebarHeader
+
+            Divider()
+
+            sidebarList
+        }
+    }
+
+    private var sidebarHeader: some View {
+        VStack(spacing: 8) {
             Picker("Filter", selection: $selectedTab) {
                 ForEach(SidebarTab.allCases, id: \.self) { tab in
                     Text(tab.rawValue).tag(tab)
                 }
             }
             .pickerStyle(.segmented)
-            .padding(.horizontal, 12)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
 
-            List {
-                switch selectedTab {
-                case .all:
-                    allAppsSection
-                case .status:
-                    statusAppsSection
-                case .hidden:
-                    hiddenAppsSection
+            HStack {
+                Text("\(filteredItems.count) apps")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                if !menuBarMonitor.menuBarItems.filter({ $0.isHidden }).isEmpty {
+                    Text("\(menuBarMonitor.menuBarItems.filter({ $0.isHidden }).count) hidden")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
                 }
             }
-            .listStyle(.sidebar)
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 
-    private var allAppsSection: some View {
-        Group {
-            if menuBarMonitor.menuBarItems.isEmpty {
+    private var sidebarList: some View {
+        List {
+            if filteredItems.isEmpty {
                 ContentUnavailableView(
-                    "No Apps",
-                    systemImage: "app.badge",
-                    description: Text("No running apps detected.")
+                    emptyTitle,
+                    systemImage: emptyIcon,
+                    description: Text(emptyDescription)
                 )
             } else {
-                ForEach(menuBarMonitor.menuBarItems) { item in
+                ForEach(filteredItems) { item in
                     SidebarRow(item: item)
                 }
             }
         }
+        .listStyle(.sidebar)
     }
 
-    private var statusAppsSection: some View {
-        Group {
-            let statusItems = menuBarMonitor.menuBarItems.filter { $0.hasStatusBar }
-            if statusItems.isEmpty {
-                ContentUnavailableView(
-                    "No Status Bar Apps",
-                    systemImage: "menubar.rectangle",
-                    description: Text("No apps with status bar icons detected.")
-                )
-            } else {
-                ForEach(statusItems) { item in
-                    SidebarRow(item: item)
-                }
-            }
+    private var emptyTitle: String {
+        switch selectedTab {
+        case .all: return "No Apps"
+        case .status: return "No Status Bar Apps"
+        case .hidden: return "No Hidden Apps"
         }
     }
 
-    private var hiddenAppsSection: some View {
-        Group {
-            let hiddenItems = menuBarMonitor.menuBarItems.filter { $0.isHidden }
-            if hiddenItems.isEmpty {
-                ContentUnavailableView(
-                    "No Hidden Apps",
-                    systemImage: "eye.slash",
-                    description: Text("No apps are currently hidden.")
-                )
-            } else {
-                ForEach(hiddenItems) { item in
-                    SidebarRow(item: item)
-                }
-            }
+    private var emptyIcon: String {
+        switch selectedTab {
+        case .all: return "app.badge"
+        case .status: return "menubar.rectangle"
+        case .hidden: return "eye.slash"
+        }
+    }
+
+    private var emptyDescription: String {
+        switch selectedTab {
+        case .all: return "No running apps detected."
+        case .status: return "No apps with status bar icons."
+        case .hidden: return "No apps are currently hidden."
         }
     }
 
@@ -122,61 +135,88 @@ struct ContentView: View {
     }
 
     private var headerView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "menubar.rectangle")
-                .font(.system(size: 48))
-                .foregroundStyle(.blue)
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "menubar.rectangle")
+                    .font(.system(size: 36))
+                    .foregroundStyle(.blue)
 
-            Text("EasyBar")
-                .font(.largeTitle)
-                .fontWeight(.semibold)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("EasyBar")
+                        .font(.title)
+                        .fontWeight(.semibold)
 
-            Text("Menu Bar Manager")
-                .font(.title3)
-                .foregroundStyle(.secondary)
-
-            if !accessibilityManager.isAuthorized {
-                Button("Grant Accessibility Permission") {
-                    accessibilityManager.requestAuthorization()
+                    Text("Menu Bar Manager")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.borderedProminent)
-            } else {
-                Label("Accessibility granted", systemImage: "checkmark.shield.fill")
-                    .foregroundStyle(.green)
+
+                Spacer()
+
+                if !accessibilityManager.isAuthorized {
+                    Button("Grant Permission") {
+                        accessibilityManager.requestAuthorization()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                } else {
+                    Label("Granted", systemImage: "checkmark.shield.fill")
+                        .font(.caption)
+                        .foregroundStyle(.green)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.green.opacity(0.1), in: Capsule())
+                }
             }
         }
-        .padding(.top, 32)
-        .padding(.bottom, 24)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
     }
 
     private var statsView: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 12) {
             StatCard(
                 title: "Total",
                 value: "\(menuBarMonitor.menuBarItems.count)",
                 icon: "list.bullet",
-                color: .blue
-            )
+                color: .blue,
+                isSelected: selectedTab == .all
+            ) {
+                withAnimation { selectedTab = .all }
+            }
+
             StatCard(
                 title: "Status Bar",
                 value: "\(menuBarMonitor.menuBarItems.filter { $0.hasStatusBar }.count)",
                 icon: "menubar.rectangle",
-                color: .purple
-            )
+                color: .purple,
+                isSelected: selectedTab == .status
+            ) {
+                withAnimation { selectedTab = .status }
+            }
+
             StatCard(
                 title: "Hidden",
                 value: "\(menuBarMonitor.menuBarItems.filter { $0.isHidden }.count)",
                 icon: "eye.slash",
-                color: .orange
-            )
+                color: .orange,
+                isSelected: selectedTab == .hidden
+            ) {
+                withAnimation { selectedTab = .hidden }
+            }
+
             StatCard(
                 title: "Running",
                 value: "\(menuBarMonitor.menuBarItems.filter { !$0.isBackground }.count)",
                 icon: "app.badge.checkmark",
-                color: .green
-            )
+                color: .green,
+                isSelected: false
+            ) {
+                withAnimation { selectedTab = .all }
+            }
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
     }
 }
 
@@ -186,33 +226,33 @@ private struct SidebarRow: View {
     let item: MenuBarMonitor.MenuBarItem
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             if let icon = item.icon {
                 Image(nsImage: icon)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 24, height: 24)
+                    .frame(width: 22, height: 22)
                     .clipShape(RoundedRectangle(cornerRadius: 4))
             } else {
                 Image(systemName: "app.fill")
-                    .font(.title3)
+                    .font(.body)
                     .foregroundStyle(.secondary)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 22, height: 22)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(item.processName)
-                    .font(.body)
+                    .font(.callout)
                     .lineLimit(1)
 
                 HStack(spacing: 4) {
                     if item.hasStatusBar {
-                        Label("Status", systemImage: "menubar.rectangle")
+                        Image(systemName: "menubar.rectangle")
                             .font(.caption2)
                             .foregroundStyle(.blue)
                     }
                     if item.isBackground {
-                        Label("BG", systemImage: "后台运行")
+                        Image(systemName: "后台运行")
                             .font(.caption2)
                             .foregroundStyle(.purple)
                     }
@@ -223,48 +263,36 @@ private struct SidebarRow: View {
                 }
             }
 
-            Spacer()
+            Spacer(minLength: 4)
 
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 if item.isHidden {
                     Image(systemName: "eye.slash")
                         .font(.caption)
                         .foregroundStyle(.orange)
-                        .help("Hidden - click to show")
-                        .onTapGesture {
-                            menuBarMonitor.showItem(item)
-                        }
+                        .onTapGesture { menuBarMonitor.showItem(item) }
                 } else {
                     Image(systemName: "eye")
                         .font(.caption)
                         .foregroundStyle(.green)
-                        .help("Visible - click to hide")
-                        .onTapGesture {
-                            menuBarMonitor.hideItem(item)
-                        }
+                        .onTapGesture { menuBarMonitor.hideItem(item) }
                 }
 
                 Menu {
-                    Button("Activate") {
-                        menuBarMonitor.activateApp(item)
-                    }
-                    Button("Quit") {
-                        menuBarMonitor.quitApp(item)
-                    }
+                    Button("Activate") { menuBarMonitor.activateApp(item) }
+                    Button("Quit") { menuBarMonitor.quitApp(item) }
                     Divider()
-                    Button("Force Quit", role: .destructive) {
-                        menuBarMonitor.forceQuitApp(item)
-                    }
+                    Button("Force Quit", role: .destructive) { menuBarMonitor.forceQuitApp(item) }
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    Image(systemName: "ellipsis")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 .menuStyle(.borderlessButton)
-                .frame(width: 20)
+                .frame(width: 16)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 3)
         .contentShape(Rectangle())
         .background(item.isHidden ? Color.orange.opacity(0.05) : Color.clear)
     }
@@ -275,21 +303,36 @@ private struct StatCard: View {
     let value: String
     let icon: String
     let color: Color
+    let isSelected: Bool
+    let action: () -> Void
 
     var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundStyle(color)
-            Text(value)
-                .font(.title)
-                .fontWeight(.semibold)
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundStyle(isSelected ? .white : color)
+                Text(value)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(isSelected ? .white : .primary)
+                Text(title)
+                    .font(.caption)
+                    .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isSelected ? color : color.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isSelected ? color : .clear, lineWidth: 2)
+            )
         }
-        .frame(width: 120)
-        .padding()
-        .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+        .buttonStyle(.plain)
+        .scaleEffect(isSelected ? 1.02 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
 }
