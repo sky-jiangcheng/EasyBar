@@ -39,16 +39,9 @@ final class AggregationPanel {
         panel.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.95)
 
         let hostingView = NSHostingView(
-            rootView: AggregationView(
-                onShowTemporarily: { [weak self] item in
-                    self?.showTemporarily(item)
-                },
-                onHidePermanently: { [weak self] item in
-                    self?.hidePermanently(item)
-                }
-            )
-            .environment(menuBarMonitor)
-            .environment(settingsStore)
+            rootView: AggregationView()
+                .environment(menuBarMonitor)
+                .environment(settingsStore)
         )
 
         panel.contentView = hostingView
@@ -84,13 +77,5 @@ final class AggregationPanel {
         let y = screen.frame.maxY - menuBarHeight - panel.frame.height - 4
 
         panel.setFrameOrigin(NSPoint(x: x, y: y))
-    }
-
-    private func showTemporarily(_ item: MenuBarMonitor.MenuBarItem) {
-        menuBarMonitor.showTemporarily(item)
-    }
-
-    private func hidePermanently(_ item: MenuBarMonitor.MenuBarItem) {
-        menuBarMonitor.hideItem(item)
     }
 }

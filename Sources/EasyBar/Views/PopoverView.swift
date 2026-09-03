@@ -6,32 +6,14 @@ struct PopoverView: View {
     @Environment(SettingsStore.self) private var settings
 
     @State private var searchText = ""
-    @State private var selectedFilter: FilterType = .all
 
     let onDismiss: () -> Void
 
-    enum FilterType: String, CaseIterable {
-        case all = "All"
-        case hidden = "Hidden"
-    }
-
-    private var allItems: [MenuBarMonitor.MenuBarItem] {
-        menuBarMonitor.menuBarItems
-    }
-
     private var filteredItems: [MenuBarMonitor.MenuBarItem] {
-        let items: [MenuBarMonitor.MenuBarItem]
-        switch selectedFilter {
-        case .all:
-            items = allItems
-        case .hidden:
-            items = allItems.filter { $0.isHidden }
-        }
-
         guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return items
+            return menuBarMonitor.menuBarItems
         }
-        return items.filter { item in
+        return menuBarMonitor.menuBarItems.filter { item in
             item.processName.localizedCaseInsensitiveContains(searchText)
                 || item.bundleIdentifier.localizedCaseInsensitiveContains(searchText)
         }
@@ -43,7 +25,7 @@ struct PopoverView: View {
 
             Divider()
 
-            filterBar
+            searchSection
 
             Divider()
 
@@ -53,7 +35,7 @@ struct PopoverView: View {
 
             footerSection
         }
-        .frame(width: 380, height: 500)
+        .frame(width: 360, height: 480)
     }
 
     private var headerSection: some View {
@@ -83,35 +65,26 @@ struct PopoverView: View {
         .padding(.vertical, 12)
     }
 
-    private var filterBar: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
-                TextField("Search...", text: $searchText)
-                    .textFieldStyle(.plain)
+    private var searchSection: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+            TextField("Search...", text: $searchText)
+                .textFieldStyle(.plain)
 
-                if !searchText.isEmpty {
-                    Button {
-                        searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
                 }
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
-
-            Picker("Filter", selection: $selectedFilter) {
-                ForEach(FilterType.allCases, id: \.self) { filter in
-                    Text(filter.rawValue).tag(filter)
-                }
-            }
-            .pickerStyle(.segmented)
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
     }
@@ -193,59 +166,47 @@ private struct IconRow: View {
                     .font(.system(.body, weight: .medium))
                     .lineLimit(1)
                     .foregroundStyle(.primary)
-                HStack(spacing: 4) {
-                    if item.isBackground {
-                        Label("BG", systemImage: "后台运行")
-                            .font(.caption2)
-                            .foregroundStyle(.purple)
-                    }
-                    Text(item.bundleIdentifier)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                }
+                Text(item.appType == .statusbarOnly ? "Status Bar" : "Dock")
+                    .font(.caption2)
+                    .foregroundStyle(item.appType == .statusbarOnly ? .purple : .green)
             }
 
             Spacer()
 
             HStack(spacing: 8) {
                 Button {
-                    if item.isHidden {
-                        menuBarMonitor.showItem(item)
-                    } else {
-                        menuBarMonitor.hideItem(item)
-                    }
+                    menuBarMonitor.activateApp(item)
                 } label: {
-                    Image(systemName: item.isHidden ? "eye.slash" : "eye")
+                    Image(systemName: "arrow.up.forward.app")
                         .font(.caption)
-                        .foregroundStyle(item.isHidden ? .orange : .green)
+                        .foregroundStyle(.blue)
                 }
                 .buttonStyle(.plain)
-                .help(item.isHidden ? "Show" : "Hide")
+                .help("Open")
 
-                Menu {
-                    Button("Activate") {
-                        menuBarMonitor.activateApp(item)
-                    }
-                    Button("Quit") {
-                        menuBarMonitor.quitApp(item)
-                    }
-                    Divider()
-                    Button("Force Quit", role: .destructive) {
-                        menuBarMonitor.forceQuitApp(item)
-                    }
+                Button {
+                    menuBarMonitor.quitApp(item)
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    Image(systemName: "xmark.circle.fill")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.red)
                 }
-                .menuStyle(.borderlessButton)
-                .frame(width: 20)
+                .buttonStyle(.plain)
+                .help("Quit")
+
+                Button {
+                    menuBarMonitor.forceQuitApp(item)
+                } label: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                }
+                .buttonStyle(.plain)
+                .help("Force Quit")
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .contentShape(Rectangle())
-        .background(item.isHidden ? Color.orange.opacity(0.05) : Color.clear)
     }
 }

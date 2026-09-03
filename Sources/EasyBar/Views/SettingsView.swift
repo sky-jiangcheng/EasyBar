@@ -144,7 +144,7 @@ struct IconManagementTab: View {
     var body: some View {
         Form {
             Section("Menu Bar Icons") {
-                Text("Toggle which icons are hidden in the menu bar and shown in the aggregation panel.")
+                Text("Detected apps and their type.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -170,18 +170,9 @@ struct IconManagementTab: View {
 
                         Spacer()
 
-                        Toggle("", isOn: Binding(
-                            get: { item.isHidden },
-                            set: { _ in
-                                if item.isHidden {
-                                    menuBarMonitor.showItem(item)
-                                } else {
-                                    menuBarMonitor.hideItem(item)
-                                }
-                            }
-                        ))
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
+                        Text(item.appType == .statusbarOnly ? "Status Bar" : "Dock")
+                            .font(.caption)
+                            .foregroundStyle(item.appType == .statusbarOnly ? .purple : .green)
                     }
                 }
                 .listStyle(.inset(alternatesRowBackgrounds: true))

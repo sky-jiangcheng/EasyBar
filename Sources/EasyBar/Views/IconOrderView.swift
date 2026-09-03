@@ -93,11 +93,9 @@ private struct IconRow: View {
 
             Spacer()
 
-            if item.isHidden {
-                Image(systemName: "eye.slash")
-                    .foregroundStyle(.secondary)
-                    .help("Hidden")
-            }
+            Text(item.appType == .statusbarOnly ? "Status Bar" : "Dock")
+                .font(.caption)
+                .foregroundStyle(item.appType == .statusbarOnly ? .purple : .green)
         }
         .padding(.vertical, 4)
     }

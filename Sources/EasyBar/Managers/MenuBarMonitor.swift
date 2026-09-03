@@ -11,13 +11,17 @@ final class MenuBarMonitor {
     private var refreshObserver: Any?
     private let settingsStore: SettingsStore
 
+    enum AppType: String {
+        case statusbarOnly = "Status Bar"
+        case dockOnly = "Dock"
+    }
+
     struct MenuBarItem: Identifiable, Hashable {
         let id: String
         let bundleIdentifier: String
         let processName: String
-        var isHidden: Bool
         let icon: NSImage?
-        let isBackground: Bool
+        let appType: AppType
 
         func hash(into hasher: inout Hasher) {
             hasher.combine(id)
@@ -76,16 +80,7 @@ final class MenuBarMonitor {
     }
 
     func refreshMenuItems() {
-        let items = getMenuItemsFromRunningApps()
-        let hiddenIDs = settingsStore.hiddenBundleIDs
-
-        menuBarItems = items.map { item in
-            var mutableItem = item
-            if hiddenIDs.contains(item.id) {
-                mutableItem.isHidden = true
-            }
-            return mutableItem
-        }
+        menuBarItems = getMenuItemsFromRunningApps()
     }
 
     private func getMenuItemsFromRunningApps() -> [MenuBarItem] {
@@ -137,20 +132,16 @@ final class MenuBarMonitor {
 
             if skipBundleIDs.contains(bundleID) { continue }
 
-            let isRegular = app.activationPolicy == .regular
-            let isAccessory = app.activationPolicy == .accessory
-
-            if isRegular {
+            if app.activationPolicy == .regular {
                 let item = MenuBarItem(
                     id: bundleID,
                     bundleIdentifier: bundleID,
                     processName: name,
-                    isHidden: false,
                     icon: app.icon,
-                    isBackground: app.isHidden
+                    appType: .dockOnly
                 )
                 items.append(item)
-            } else if isAccessory {
+            } else if app.activationPolicy == .accessory {
                 guard !bundleID.hasPrefix("com.apple.WebKit.") else { continue }
                 guard !bundleID.hasPrefix("com.apple.") else { continue }
 
@@ -165,44 +156,14 @@ final class MenuBarMonitor {
                     id: bundleID,
                     bundleIdentifier: bundleID,
                     processName: name,
-                    isHidden: false,
                     icon: app.icon,
-                    isBackground: true
+                    appType: .statusbarOnly
                 )
                 items.append(item)
             }
         }
 
         return items.sorted { $0.processName.localizedCaseInsensitiveCompare($1.processName) == .orderedAscending }
-    }
-
-    func hideItem(_ item: MenuBarItem) {
-        guard let index = menuBarItems.firstIndex(where: { $0.id == item.id }) else { return }
-        menuBarItems[index].isHidden = true
-
-        if !settingsStore.hiddenBundleIDs.contains(item.bundleIdentifier) {
-            settingsStore.hiddenBundleIDs.insert(item.bundleIdentifier)
-            settingsStore.save()
-        }
-
-        NotificationCenter.default.post(name: .aggregationShouldShow, object: nil)
-    }
-
-    func showItem(_ item: MenuBarItem) {
-        guard let index = menuBarItems.firstIndex(where: { $0.id == item.id }) else { return }
-        menuBarItems[index].isHidden = false
-
-        if settingsStore.hiddenBundleIDs.contains(item.bundleIdentifier) {
-            settingsStore.hiddenBundleIDs.remove(item.bundleIdentifier)
-            settingsStore.save()
-        }
-    }
-
-    func showTemporarily(_ item: MenuBarItem) {
-        guard let index = menuBarItems.firstIndex(where: { $0.id == item.id }) else { return }
-        menuBarItems[index].isHidden = false
-
-        scheduleAutoHide(for: item)
     }
 
     func quitApp(_ item: MenuBarItem) {
@@ -218,20 +179,6 @@ final class MenuBarMonitor {
     func activateApp(_ item: MenuBarItem) {
         guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }
         app.activate()
-    }
-
-    private func scheduleAutoHide(for item: MenuBarItem) {
-        guard let delay = settingsStore.autoHideDelay, delay > 0 else { return }
-
-        Task {
-            try? await Task.sleep(for: .seconds(delay))
-            guard !Task.isCancelled else { return }
-
-            if let index = menuBarItems.firstIndex(where: { $0.id == item.id }),
-               !menuBarItems[index].isHidden {
-                menuBarItems[index].isHidden = true
-            }
-        }
     }
 }
 

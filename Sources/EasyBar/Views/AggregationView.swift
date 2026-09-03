@@ -4,16 +4,9 @@ struct AggregationView: View {
     @Environment(MenuBarMonitor.self) private var menuBarMonitor
     @Environment(SettingsStore.self) private var settings
 
-    let onShowTemporarily: (MenuBarMonitor.MenuBarItem) -> Void
-    let onHidePermanently: (MenuBarMonitor.MenuBarItem) -> Void
-
-    private var hiddenItems: [MenuBarMonitor.MenuBarItem] {
-        menuBarMonitor.menuBarItems.filter { $0.isHidden }
-    }
-
     var body: some View {
         VStack(spacing: 0) {
-            if hiddenItems.isEmpty {
+            if menuBarMonitor.menuBarItems.isEmpty {
                 emptyState
             } else {
                 iconGrid
@@ -28,7 +21,7 @@ struct AggregationView: View {
         HStack {
             aggregationIconView
                 .frame(width: 20, height: 20)
-            Text("No hidden icons")
+            Text("No apps running")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -38,12 +31,8 @@ struct AggregationView: View {
     private var iconGrid: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: settings.iconSpacing.value) {
-                ForEach(hiddenItems) { item in
-                    IconButton(
-                        item: item,
-                        onTap: { onShowTemporarily(item) },
-                        onHide: { onHidePermanently(item) }
-                    )
+                ForEach(menuBarMonitor.menuBarItems) { item in
+                    AggregationIcon(item: item)
                 }
             }
         }
@@ -73,49 +62,39 @@ struct AggregationView: View {
     }
 }
 
-private struct IconButton: View {
+private struct AggregationIcon: View {
     let item: MenuBarMonitor.MenuBarItem
-    let onTap: () -> Void
-    let onHide: () -> Void
 
     @State private var isHovering = false
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(spacing: 4) {
-                if let icon = item.icon {
-                    Image(nsImage: icon)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 24, height: 24)
-                } else {
-                    Image(systemName: "app.fill")
-                        .font(.title3)
-                        .frame(width: 24, height: 24)
-                }
-
-                Text(item.processName)
-                    .font(.system(size: 9))
-                    .lineLimit(1)
+        VStack(spacing: 4) {
+            if let icon = item.icon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
+            } else {
+                Image(systemName: "app.fill")
+                    .font(.title3)
+                    .frame(width: 24, height: 24)
             }
-            .frame(width: 56, height: 56)
-            .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
-            .overlay {
-                if isHovering {
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(.secondary, lineWidth: 1)
-                }
+
+            Text(item.processName)
+                .font(.system(size: 9))
+                .lineLimit(1)
+        }
+        .frame(width: 56, height: 56)
+        .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            if isHovering {
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(.secondary, lineWidth: 1)
             }
         }
-        .buttonStyle(.plain)
         .onHover { hovering in
             isHovering = hovering
         }
-        .help("Click to show temporarily\nRight-click to hide permanently")
-        .contextMenu {
-            Button("Hide Permanently") {
-                onHide()
-            }
-        }
+        .help(item.processName)
     }
 }

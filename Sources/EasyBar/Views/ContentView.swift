@@ -5,19 +5,22 @@ struct ContentView: View {
     @Environment(SettingsStore.self) private var settings
     @Environment(AccessibilityManager.self) private var accessibilityManager
 
-    @State private var selectedTab: SidebarTab = .all
+    @State private var selectedFilter: AppFilter = .all
 
-    enum SidebarTab: String, CaseIterable {
+    enum AppFilter: String, CaseIterable {
         case all = "All"
-        case hidden = "Hidden"
+        case statusbar = "Status Bar"
+        case dock = "Dock"
     }
 
     private var filteredItems: [MenuBarMonitor.MenuBarItem] {
-        switch selectedTab {
+        switch selectedFilter {
         case .all:
             menuBarMonitor.menuBarItems
-        case .hidden:
-            menuBarMonitor.menuBarItems.filter { $0.isHidden }
+        case .statusbar:
+            menuBarMonitor.menuBarItems.filter { $0.appType == .statusbarOnly }
+        case .dock:
+            menuBarMonitor.menuBarItems.filter { $0.appType == .dockOnly }
         }
     }
 
@@ -49,33 +52,24 @@ struct ContentView: View {
     private var sidebar: some View {
         VStack(spacing: 0) {
             sidebarHeader
-
             Divider()
-
             sidebarList
         }
     }
 
     private var sidebarHeader: some View {
         VStack(spacing: 8) {
-            Picker("Filter", selection: $selectedTab) {
-                ForEach(SidebarTab.allCases, id: \.self) { tab in
-                    Text(tab.rawValue).tag(tab)
+            Picker("Filter", selection: $selectedFilter) {
+                ForEach(AppFilter.allCases, id: \.self) { filter in
+                    Text(filter.rawValue).tag(filter)
                 }
             }
             .pickerStyle(.segmented)
 
-            HStack {
-                Text("\(filteredItems.count) apps")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if !menuBarMonitor.menuBarItems.filter({ $0.isHidden }).isEmpty {
-                    Text("\(menuBarMonitor.menuBarItems.filter({ $0.isHidden }).count) hidden")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                }
-            }
+            Text("\(filteredItems.count) apps")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -85,9 +79,9 @@ struct ContentView: View {
         List {
             if filteredItems.isEmpty {
                 ContentUnavailableView(
-                    emptyTitle,
-                    systemImage: emptyIcon,
-                    description: Text(emptyDescription)
+                    "No Apps",
+                    systemImage: "app.badge",
+                    description: Text("No apps in this category.")
                 )
             } else {
                 ForEach(filteredItems) { item in
@@ -96,27 +90,6 @@ struct ContentView: View {
             }
         }
         .listStyle(.sidebar)
-    }
-
-    private var emptyTitle: String {
-        switch selectedTab {
-        case .all: return "No Apps"
-        case .hidden: return "No Hidden Apps"
-        }
-    }
-
-    private var emptyIcon: String {
-        switch selectedTab {
-        case .all: return "app.badge"
-        case .hidden: return "eye.slash"
-        }
-    }
-
-    private var emptyDescription: String {
-        switch selectedTab {
-        case .all: return "No running apps detected."
-        case .hidden: return "No apps are currently hidden."
-        }
     }
 
     private var detailView: some View {
@@ -129,38 +102,36 @@ struct ContentView: View {
     }
 
     private var headerView: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 12) {
-                Image(systemName: "menubar.rectangle")
-                    .font(.system(size: 36))
-                    .foregroundStyle(.blue)
+        HStack(spacing: 12) {
+            Image(systemName: "menubar.rectangle")
+                .font(.system(size: 36))
+                .foregroundStyle(.blue)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("EasyBar")
-                        .font(.title)
-                        .fontWeight(.semibold)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("EasyBar")
+                    .font(.title)
+                    .fontWeight(.semibold)
 
-                    Text("Menu Bar Manager")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                Text("Menu Bar Manager")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            if !accessibilityManager.isAuthorized {
+                Button("Grant Permission") {
+                    accessibilityManager.requestAuthorization()
                 }
-
-                Spacer()
-
-                if !accessibilityManager.isAuthorized {
-                    Button("Grant Permission") {
-                        accessibilityManager.requestAuthorization()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                } else {
-                    Label("Granted", systemImage: "checkmark.shield.fill")
-                        .font(.caption)
-                        .foregroundStyle(.green)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(.green.opacity(0.1), in: Capsule())
-                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+            } else {
+                Label("Granted", systemImage: "checkmark.shield.fill")
+                    .font(.caption)
+                    .foregroundStyle(.green)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.green.opacity(0.1), in: Capsule())
             }
         }
         .padding(.horizontal, 24)
@@ -174,29 +145,29 @@ struct ContentView: View {
                 value: "\(menuBarMonitor.menuBarItems.count)",
                 icon: "list.bullet",
                 color: .blue,
-                isSelected: selectedTab == .all
+                isSelected: selectedFilter == .all
             ) {
-                withAnimation { selectedTab = .all }
+                withAnimation { selectedFilter = .all }
             }
 
             StatCard(
-                title: "Hidden",
-                value: "\(menuBarMonitor.menuBarItems.filter { $0.isHidden }.count)",
-                icon: "eye.slash",
-                color: .orange,
-                isSelected: selectedTab == .hidden
-            ) {
-                withAnimation { selectedTab = .hidden }
-            }
-
-            StatCard(
-                title: "Background",
-                value: "\(menuBarMonitor.menuBarItems.filter { $0.isBackground }.count)",
-                icon: "后台运行",
+                title: "Status Bar",
+                value: "\(menuBarMonitor.menuBarItems.filter { $0.appType == .statusbarOnly }.count)",
+                icon: "menubar.rectangle",
                 color: .purple,
-                isSelected: false
+                isSelected: selectedFilter == .statusbar
             ) {
-                withAnimation { selectedTab = .all }
+                withAnimation { selectedFilter = .statusbar }
+            }
+
+            StatCard(
+                title: "Dock",
+                value: "\(menuBarMonitor.menuBarItems.filter { $0.appType == .dockOnly }.count)",
+                icon: "dock.rectangle",
+                color: .green,
+                isSelected: selectedFilter == .dock
+            ) {
+                withAnimation { selectedFilter = .dock }
             }
         }
         .padding(.horizontal, 24)
@@ -210,72 +181,66 @@ private struct SidebarRow: View {
     let item: MenuBarMonitor.MenuBarItem
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             if let icon = item.icon {
                 Image(nsImage: icon)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 22, height: 22)
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .frame(width: 28, height: 28)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
             } else {
                 Image(systemName: "app.fill")
-                    .font(.body)
+                    .font(.title3)
                     .foregroundStyle(.secondary)
-                    .frame(width: 22, height: 22)
+                    .frame(width: 28, height: 28)
             }
 
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(item.processName)
-                    .font(.callout)
+                    .font(.body)
                     .lineLimit(1)
 
-                HStack(spacing: 4) {
-                    if item.isBackground {
-                        Image(systemName: "后台运行")
-                            .font(.caption2)
-                            .foregroundStyle(.purple)
-                    }
-                    Text(item.bundleIdentifier)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                }
+                Text(item.appType == .statusbarOnly ? "Status Bar" : "Dock")
+                    .font(.caption)
+                    .foregroundStyle(item.appType == .statusbarOnly ? .purple : .green)
             }
 
-            Spacer(minLength: 4)
+            Spacer()
 
-            HStack(spacing: 4) {
+            HStack(spacing: 8) {
                 Button {
-                    if item.isHidden {
-                        menuBarMonitor.showItem(item)
-                    } else {
-                        menuBarMonitor.hideItem(item)
-                    }
+                    menuBarMonitor.activateApp(item)
                 } label: {
-                    Image(systemName: item.isHidden ? "eye.slash" : "eye")
-                        .font(.caption)
-                        .foregroundStyle(item.isHidden ? .orange : .green)
+                    Image(systemName: "arrow.up.forward.app")
+                        .font(.body)
+                        .foregroundStyle(.blue)
                 }
                 .buttonStyle(.plain)
-                .help(item.isHidden ? "Show" : "Hide")
+                .help("Open")
 
-                Menu {
-                    Button("Activate") { menuBarMonitor.activateApp(item) }
-                    Button("Quit") { menuBarMonitor.quitApp(item) }
-                    Divider()
-                    Button("Force Quit", role: .destructive) { menuBarMonitor.forceQuitApp(item) }
+                Button {
+                    menuBarMonitor.quitApp(item)
                 } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.body)
+                        .foregroundStyle(.red)
                 }
-                .menuStyle(.borderlessButton)
-                .frame(width: 16)
+                .buttonStyle(.plain)
+                .help("Quit")
+
+                Button {
+                    menuBarMonitor.forceQuitApp(item)
+                } label: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+                .buttonStyle(.plain)
+                .help("Force Quit")
             }
         }
-        .padding(.vertical, 3)
+        .padding(.vertical, 6)
         .contentShape(Rectangle())
-        .background(item.isHidden ? Color.orange.opacity(0.05) : Color.clear)
     }
 }
 
