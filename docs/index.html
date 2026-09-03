@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>MacStatus</title>
+    <title>EasyBar - macOS 菜单栏管理工具</title>
     <style>
       :root {
         color-scheme: light dark;
@@ -25,17 +25,122 @@
         font-size: 34px;
         line-height: 1.15;
       }
+      h2 {
+        margin-top: 32px;
+        font-size: 22px;
+      }
       a {
         color: LinkText;
+      }
+      .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .badge-statusbar {
+        background: rgba(147, 51, 234, 0.15);
+        color: rgb(147, 51, 234);
+      }
+      .badge-dock {
+        background: rgba(34, 197, 94, 0.15);
+        color: rgb(34, 197, 94);
+      }
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .feature-card {
+        padding: 16px;
+        border-radius: 8px;
+        background: rgba(128, 128, 128, 0.1);
+      }
+      .feature-card h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+      }
+      .feature-card p {
+        margin: 0;
+        font-size: 14px;
+        color: rgba(128, 128, 128, 0.8);
+      }
+      code {
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(128, 128, 128, 0.15);
+        font-family: "SF Mono", Menlo, monospace;
+        font-size: 13px;
+      }
+      pre {
+        padding: 16px;
+        border-radius: 8px;
+        background: rgba(128, 128, 128, 0.1);
+        overflow-x: auto;
+      }
+      pre code {
+        padding: 0;
+        background: none;
       }
     </style>
   </head>
   <body>
     <main>
-      <h1>MacStatus</h1>
-      <p>A lightweight dashboard for viewing the current time and running apps on your Mac.</p>
+      <h1>EasyBar</h1>
+      <p>macOS 菜单栏管理工具，自动检测并管理状态栏和 Dock 应用。</p>
+
+      <h2>功能特性</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>🔍 自动检测</h3>
+          <p>基于 activationPolicy 自动区分 Status Bar 和 Dock 应用</p>
+        </div>
+        <div class="feature-card">
+          <h3>⚡ 一键操作</h3>
+          <p>打开、退出、强制退出应用</p>
+        </div>
+        <div class="feature-card">
+          <h3>📊 实时统计</h3>
+          <p>Total / Status Bar / Dock 统计卡片</p>
+        </div>
+        <div class="feature-card">
+          <h3>🔎 搜索过滤</h3>
+          <p>按名称或 Bundle ID 快速搜索</p>
+        </div>
+      </div>
+
+      <h2>App 类型</h2>
+      <p>
+        <span class="badge badge-statusbar">Status Bar</span>
+        仅有状态栏图标，无 Dock 图标。使用 <code>launchApplication</code> 激活。
+      </p>
+      <p>
+        <span class="badge badge-dock">Dock</span>
+        有 Dock 图标。使用 <code>activate</code> 激活。
+      </p>
+
+      <h2>本地运行</h2>
+      <pre><code># 构建并运行
+./script/build_and_run.sh
+
+# 仅构建
+swift build
+
+# 运行已构建的 app
+./script/build_and_run.sh run</code></pre>
+
+      <h2>系统要求</h2>
+      <ul>
+        <li>macOS 14.0+</li>
+        <li>Accessibility 权限（用于检测应用状态）</li>
+      </ul>
+
+      <h2>链接</h2>
       <p><a href="./support/">Technical Support</a></p>
       <p><a href="./privacy/">Privacy Policy</a></p>
+      <p><a href="https://github.com/sky-jiangcheng/EasyBar">GitHub</a></p>
     </main>
   </body>
 </html>

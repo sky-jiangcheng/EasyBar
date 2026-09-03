@@ -1,29 +1,105 @@
 # EasyBar
 
-A lightweight macOS dashboard for checking the current time and running apps.
+macOS 菜单栏管理工具，自动检测并管理状态栏和 Dock 应用。
 
-## Features
+## 功能特性
 
-- Live clock and date.
-- Running app list from `NSWorkspace`.
-- Search by app name or bundle identifier.
-- Optional background-process visibility.
-- Keyboard shortcuts:
-  - `Command R`: refresh running apps.
-  - `Command Shift H`: hide the app.
-  - `Command F`: search.
-  - `Command W`: close the window.
+### 核心功能
+- **App 类型自动检测**：基于 `activationPolicy` 自动区分 Status Bar 和 Dock 应用
+- **操作按钮**：一键打开、退出、强制退出应用
+- **实时监控**：定时刷新运行中的应用列表
+- **搜索过滤**：按名称或 Bundle ID 搜索应用
 
-## Local Run
+### 界面设计
+- **主窗口**：HSplitView 布局，左侧 sidebar + 右侧详情
+- **Stat Cards**：Total / Status Bar / Dock 统计卡片，点击联动过滤
+- **Popover**：状态栏聚合面板，搜索 + 应用列表
+- **操作按钮**：Open (🔵) / Quit (🔴) / Force Quit (🟠)
 
-```bash
-./script/build_and_run.sh
+### App 类型
+| 类型 | 说明 | 激活方式 |
+|------|------|----------|
+| Status Bar | 仅有状态栏图标，无 Dock 图标 | `launchApplication` |
+| Dock | 有 Dock 图标 | `activate` |
+
+## 技术栈
+
+- **语言**：Swift 6.0
+- **最低系统**：macOS 14+
+- **框架**：SwiftUI + AppKit
+- **架构**：`@Observable` (Observation framework)
+- **构建**：Swift Package Manager
+
+## 项目结构
+
+```
+EasyBar/
+├── Sources/EasyBar/
+│   ├── App/
+│   │   ├── MacStatusApp.swift      # App 入口
+│   │   └── StatusBarManager.swift  # 状态栏管理
+│   ├── Managers/
+│   │   ├── MenuBarMonitor.swift    # 核心监控逻辑
+│   │   ├── SettingsStore.swift     # 设置存储
+│   │   ├── AccessibilityManager.swift  # 权限管理
+│   │   └── AggregationPanel.swift  # 聚合面板
+│   └── Views/
+│       ├── ContentView.swift       # 主窗口
+│       ├── PopoverView.swift       # 状态栏面板
+│       ├── SettingsView.swift      # 设置界面
+│       ├── AggregationView.swift   # 聚合视图
+│       └── IconOrderView.swift     # 图标排序
+├── Package.swift
+├── script/
+│   └── build_and_run.sh
+└── docs/
+    ├── index.html
+    ├── privacy/
+    └── support/
 ```
 
-## App Store Notes
+## 本地运行
 
-The app uses App Store-friendly APIs for the first version. It does not inspect windows, keystrokes, screen content, network traffic, or private process memory.
+```bash
+# 构建并运行
+./script/build_and_run.sh
 
-Before App Store submission, build with full Xcode, configure your Apple Developer Team, enable App Sandbox, use `Sources/EasyBar/Resources/EasyBar.entitlements`, archive, validate, and upload through Organizer or Transporter.
+# 仅构建
+swift build
 
-Privacy policy page source: `docs/privacy/index.html`.
+# 运行已构建的 app
+./script/build_and_run.sh run
+```
+
+## 系统要求
+
+- macOS 14.0+
+- Accessibility 权限（用于检测应用状态）
+
+## 已知限制
+
+- Status Bar 应用无法通过 `NSRunningApplication.activate()` 激活（macOS 安全限制）
+- 部分 accessory app（如 Macs Fan Control）无法被其他 app 激活
+- App 类型检测基于 `activationPolicy`，无法自动检测状态栏图标
+
+## 版本历史
+
+| 版本 | 内容 |
+|------|------|
+| v1.1.0 | Phase 1-5 完整实现 |
+| v1.2.0 | Window + status bar 支持 |
+| v1.3.0 | P0/P1 code review 修复 |
+| v1.4.0 | AggregationPanel 可达 + iconSpacing |
+| v1.5.0 | AX API 兼容性 + debug 工具 |
+| v1.6.0 | 移除 AX 隐藏，纯 UI 聚合方案 |
+| v1.7.0 | Quit/force-quit + App 状态检测 |
+| v1.8.0 | UI 重新设计 + Sidebar 修复 |
+| v1.9.0 | HSplitView 布局 + stat card 联动 |
+| v1.10.0 | accessory app 检测 + eye icon 手势修复 |
+| v1.11.0 | 移除 hasStatusBar 自动检测 |
+| v1.12.0 | App 类型检测 + 移除 hide 功能 |
+| v1.13.0 | **里程碑：Status Bar app 跳转修复** |
+
+## License
+
+MIT
