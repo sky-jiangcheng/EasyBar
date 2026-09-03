@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EasyBar - 技术支持</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      body {
+        margin: 0;
+        background: Canvas;
+        color: CanvasText;
+        line-height: 1.6;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 56px 24px 72px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 34px;
+        line-height: 1.15;
+      }
+      h2 {
+        margin-top: 34px;
+        font-size: 20px;
+      }
+      p, li {
+        font-size: 16px;
+      }
+      .subtitle {
+        color: GrayText;
+        margin-bottom: 34px;
+      }
+      a {
+        color: LinkText;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>EasyBar 技术支持</h1>
+      <p class="subtitle">EasyBar 的帮助和联系信息。</p>
+
+      <h2>联系我们</h2>
+      <p>如需支持、错误报告或反馈，请发送邮件至 <a href="mailto:jiangcheng1806@gmail.com">jiangcheng1806@gmail.com</a>。</p>
+
+      <h2>常见问题</h2>
+      <p><strong>如何刷新运行中的应用列表？</strong><br>点击工具栏中的刷新按钮。EasyBar 也会自动更新列表。</p>
+      <p><strong>为什么有些 Status Bar 应用无法通过箭头按钮打开？</strong><br>macOS 安全限制不允许一个 app 通过 <code>NSRunningApplication.activate()</code> 激活另一个 accessory app（没有 Dock 图标的 app）。这是系统限制，非 EasyBar 问题。</p>
+      <p><strong>EasyBar 是否收集个人数据？</strong><br>不。运行中的应用信息在本地处理，不会上传到任何服务器。</p>
+      <p><strong>为什么需要 Accessibility 权限？</strong><br>EasyBar 需要此权限来检测应用的运行状态（运行中/隐藏）。此权限仅用于读取应用状态，不访问您的文件或其他数据。</p>
+
+      <h2>系统要求</h2>
+      <p>EasyBar 需要 macOS 14.0 或更高版本。</p>
+
+      <h2>隐私</h2>
+      <p>阅读 <a href="../privacy/">EasyBar 隐私政策</a>。</p>
+    </main>
+  </body>
+</html>
