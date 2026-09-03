@@ -45,7 +45,7 @@ struct ContentView: View {
                 accessibilityManager.showPermissionAlert = false
             }
         } message: {
-            Text("EasyBar needs Accessibility permission to manage menu bar icons.")
+            Text("StatusBar Pro needs Accessibility permission to manage menu bar icons.")
         }
     }
 
@@ -108,7 +108,7 @@ struct ContentView: View {
                 .foregroundStyle(.blue)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("EasyBar")
+                Text("StatusBar Pro")
                     .font(.title)
                     .fontWeight(.semibold)
 

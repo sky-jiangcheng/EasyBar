@@ -88,7 +88,7 @@ final class MenuBarMonitor {
         let runningApps = NSWorkspace.shared.runningApplications
 
         let skipBundleIDs: Set<String> = [
-            "com.jiangcheng.EasyBar",
+            "com.jiangcheng.MacStatusApp",
             "com.apple.Spotlight",
             "com.apple.WindowManager",
             "com.apple.notificationcenterui",

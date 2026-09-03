@@ -41,7 +41,7 @@ struct PopoverView: View {
     private var headerSection: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("EasyBar")
+                Text("StatusBar Pro")
                     .font(.headline)
                 Text("\(menuBarMonitor.menuBarItems.count) apps")
                     .font(.caption)
@@ -112,7 +112,7 @@ struct PopoverView: View {
 
     private var footerSection: some View {
         HStack {
-            Text("EasyBar")
+            Text("StatusBar Pro")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
 

@@ -2,11 +2,11 @@ import AppKit
 import SwiftUI
 
 @main
-struct EasyBarApp: App {
+struct StatusBarProApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        Window("EasyBar", id: "main") {
+        Window("StatusBar Pro", id: "main") {
             ContentView()
                 .environment(appDelegate.settingsStore)
                 .environment(appDelegate.menuBarMonitor)

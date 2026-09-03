@@ -32,9 +32,9 @@ final class StatusBarManager {
 
         guard let button = statusItem?.button else { return }
 
-        let icon = NSImage(systemSymbolName: "menubar.rectangle", accessibilityDescription: "EasyBar")
+        let icon = NSImage(systemSymbolName: "menubar.rectangle", accessibilityDescription: "StatusBar Pro")
         button.image = icon
-        button.toolTip = "EasyBar - Menu Bar Manager"
+        button.toolTip = "StatusBar Pro - Menu Bar Manager"
 
         button.action = #selector(statusBarButtonClicked(_:))
         button.target = self
@@ -125,7 +125,7 @@ final class StatusBarManager {
         menu.addItem(.separator())
 
         let quitItem = NSMenuItem(
-            title: "Quit EasyBar",
+            title: "Quit StatusBar Pro",
             action: #selector(quitApp),
             keyEquivalent: "q"
         )

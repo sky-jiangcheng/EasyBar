@@ -1,4 +1,4 @@
-# EasyBar App Store 清单
+# StatusBar Pro App Store 清单
 
 ## 当前 App Store 兼容范围
 
@@ -6,19 +6,19 @@
 - 通过 `NSWorkspace.shared.runningApplications` 列出运行中的应用
 - 不请求屏幕录制、输入监控、文件访问、网络访问或自动化权限
 - 请求 Accessibility 权限以检测应用状态（运行中/隐藏）
-- 包含最小 App Sandbox 授权文件 `Sources/EasyBar/Resources/EasyBar.entitlements`
+- 包含最小 App Sandbox 授权文件 `Sources/StatusBar Pro/Resources/StatusBar Pro.entitlements`
 - 通过 `script/build_and_run.sh` 提供本地签名 `.app` 包
-- 包含占位 App Icon 资源目录 `Sources/EasyBar/Resources/Assets.xcassets`
+- 包含占位 App Icon 资源目录 `Sources/StatusBar Pro/Resources/Assets.xcassets`
 
 ## 提交前必要步骤
 
 1. 安装完整 Xcode 并使用 `xcode-select` 选择
-2. 打开 `EasyBar.xcodeproj`
+2. 打开 `StatusBar Pro.xcodeproj`
 3. 使用 Apple Developer 账户登录 Xcode
-4. 选择 `EasyBar` target，在 Signing & Capabilities 中选择你的 Team
-5. 为 `com.jiangcheng.EasyBar` 创建 Apple Developer App ID（或更新 bundle identifier）
+4. 选择 `StatusBar Pro` target，在 Signing & Capabilities 中选择你的 Team
+5. 为 `com.jiangcheng.StatusBar Pro` 创建 Apple Developer App ID（或更新 bundle identifier）
 6. 保持 Automatically manage signing 启用，让 Xcode 自动创建 provisioning profile
-7. 确认 App Sandbox 已通过 `Sources/EasyBar/Resources/EasyBar.entitlements` 启用
+7. 确认 App Sandbox 已通过 `Sources/StatusBar Pro/Resources/StatusBar Pro.entitlements` 启用
 8. 配置 Mac App Store 发布证书和 provisioning profile
 9. 添加生产元数据：
    - App 图标集
@@ -30,12 +30,12 @@
 
 ## 当前本地状态
 
-- `EasyBar.xcodeproj` 存在，包含 `EasyBar` macOS target 和共享 scheme
+- `StatusBar Pro.xcodeproj` 存在，包含 `StatusBar Pro` macOS target 和共享 scheme
 - Xcode Debug 构建成功，Team `M3A6LK593A`
 - Xcode Release 归档成功
-- App Store Connect 导出成功，生成 `build/export/EasyBar.pkg`
+- App Store Connect 导出成功，生成 `build/export/StatusBar Pro.pkg`
 - 导出包使用 `Cloud Managed Apple Distribution`
-- 导出 app 使用 `Team Store Provisioning Profile: com.jiangcheng.EasyBar`
+- 导出 app 使用 `Team Store Provisioning Profile: com.jiangcheng.StatusBar Pro`
 - App Store Connect 上传成功，包正在处理中
 
 ## 创建 App Store Connect App 记录
@@ -43,15 +43,15 @@
 在 App Store Connect 中创建新的 macOS app：
 
 - Platform: macOS
-- Name: EasyBar
-- Bundle ID: `com.jiangcheng.EasyBar`
+- Name: StatusBar Pro
+- Bundle ID: `com.jiangcheng.StatusBar Pro`
 - SKU: `easybar-001`
 - User Access: Full Access
 
 上传新构建：
 
 ```bash
-env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -exportArchive -archivePath build/EasyBar.xcarchive -exportPath build/upload -exportOptionsPlist ExportOptionsUpload.plist -allowProvisioningUpdates
+env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -exportArchive -archivePath build/StatusBar Pro.xcarchive -exportPath build/upload -exportOptionsPlist ExportOptionsUpload.plist -allowProvisioningUpdates
 ```
 
 ## 功能特性
@@ -74,10 +74,10 @@ env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -exportA
 
 ## 重要约束
 
-此版本有意避免全局热键，因为 App Store 安全的全局快捷键处理可能需要额外权限或额外的审查说明。已实现的快捷键在 EasyBar 活动时工作：
+此版本有意避免全局热键，因为 App Store 安全的全局快捷键处理可能需要额外权限或额外的审查说明。已实现的快捷键在 StatusBar Pro 活动时工作：
 
 - `Command R`：刷新运行中的应用
-- `Command Shift H`：隐藏 EasyBar
+- `Command Shift H`：隐藏 StatusBar Pro
 - `Command F`：搜索
 - `Command W`：关闭窗口
 

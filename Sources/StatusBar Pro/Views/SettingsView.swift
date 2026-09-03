@@ -99,7 +99,7 @@ struct GeneralSettingsTab: View {
         case .normal:
             return "Fold menu bar icons into a single expandable menu item."
         case .disabled:
-            return "EasyBar will not manage menu bar icons."
+            return "StatusBar Pro will not manage menu bar icons."
         }
     }
 }

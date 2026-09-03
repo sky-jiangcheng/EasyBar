@@ -1,4 +1,4 @@
-# EasyBar
+# StatusBar Pro
 
 macOS 菜单栏管理工具，自动检测并管理状态栏和 Dock 应用。
 
@@ -33,10 +33,10 @@ macOS 菜单栏管理工具，自动检测并管理状态栏和 Dock 应用。
 ## 项目结构
 
 ```
-EasyBar/
-├── Sources/EasyBar/
+StatusBar Pro/
+├── Sources/StatusBar Pro/
 │   ├── App/
-│   │   ├── EasyBarApp.swift      # App 入口
+│   │   ├── StatusBar ProApp.swift      # App 入口
 │   │   └── StatusBarManager.swift  # 状态栏管理
 │   ├── Managers/
 │   │   ├── MenuBarMonitor.swift    # 核心监控逻辑
