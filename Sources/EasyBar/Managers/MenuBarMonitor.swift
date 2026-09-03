@@ -106,28 +106,6 @@ final class MenuBarMonitor {
             }
         }
 
-        for app in NSWorkspace.shared.runningApplications {
-            guard app.activationPolicy == .regular else { continue }
-            if app.activationPolicy == .regular && !app.isTerminated {
-                if let windows = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[String: Any]] {
-                    for window in windows {
-                        guard let ownerPID = window[kCGWindowOwnerPID as String] as? pid_t,
-                              ownerPID == app.processIdentifier else { continue }
-
-                        let bounds = window[kCGWindowBounds as String] as? [String: Any] ?? [:]
-                        let y = bounds["Y"] as? Double ?? 100
-                        let h = bounds["Height"] as? Double ?? 0
-
-                        if y < 40 && h < 40 {
-                            if let bundleID = app.bundleIdentifier {
-                                statusAppIDs.insert(bundleID)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         return statusAppIDs
     }
 
@@ -135,26 +113,89 @@ final class MenuBarMonitor {
         var items: [MenuBarItem] = []
         let runningApps = NSWorkspace.shared.runningApplications
 
+        let skipBundleIDs: Set<String> = [
+            "com.jiangcheng.EasyBar",
+            "com.apple.Spotlight",
+            "com.apple.WindowManager",
+            "com.apple.notificationcenterui",
+            "com.apple.controlcenter",
+            "com.apple.controlcenter.helper",
+            "com.apple.dock",
+            "com.apple.dock.helper",
+            "com.apple.dock.extra",
+            "com.apple.Siri",
+            "com.apple.loginwindow",
+            "com.apple.CoreLocationAgent",
+            "com.apple.coreservices.uiagent",
+            "com.apple.backgroundtaskmanagement.agent",
+            "com.apple.SoftwareUpdateNotificationManager",
+            "com.apple.UserNotificationCenter",
+            "com.apple.Security.keychain-circle-Notification",
+            "com.apple.accessibility.universalAccessAuthWarn",
+            "com.apple.LocalAuthentication.UIAgent",
+            "com.apple.talagent",
+            "com.apple.storeuid",
+            "com.apple.TextInputMenuAgent",
+            "com.apple.TextInputSwitcher",
+            "com.apple.wifi.WiFiAgent",
+            "com.apple.AirPlayUIAgent",
+            "com.apple.universalcontrol",
+            "com.apple.AccessibilityUIServer",
+            "com.apple.wallpaper.agent",
+            "com.apple.PowerChime",
+            "com.apple.WorkflowKit.ShortcutsViewService",
+        ]
+
         for app in runningApps {
-            guard app.activationPolicy == .regular,
+            guard !app.isTerminated,
                   let bundleID = app.bundleIdentifier,
-                  let name = app.localizedName else {
+                  let name = app.localizedName,
+                  !bundleID.isEmpty,
+                  !name.isEmpty else {
                 continue
             }
 
-            let isHiddenApp = app.isHidden
-            let hasStatusBar = hasStatusBarIDs.contains(bundleID)
+            if skipBundleIDs.contains(bundleID) { continue }
 
-            let item = MenuBarItem(
-                id: bundleID,
-                bundleIdentifier: bundleID,
-                processName: name,
-                isHidden: false,
-                icon: app.icon,
-                hasStatusBar: hasStatusBar,
-                isBackground: isHiddenApp && !hasStatusBar
-            )
-            items.append(item)
+            let isRegular = app.activationPolicy == .regular
+            let isAccessory = app.activationPolicy == .accessory
+
+            if isRegular {
+                let isHiddenApp = app.isHidden
+                let hasStatusBar = hasStatusBarIDs.contains(bundleID)
+
+                let item = MenuBarItem(
+                    id: bundleID,
+                    bundleIdentifier: bundleID,
+                    processName: name,
+                    isHidden: false,
+                    icon: app.icon,
+                    hasStatusBar: hasStatusBar,
+                    isBackground: isHiddenApp && !hasStatusBar
+                )
+                items.append(item)
+            } else if isAccessory {
+                guard !bundleID.hasPrefix("com.apple.WebKit.") else { continue }
+                guard !bundleID.hasPrefix("com.apple.") else { continue }
+
+                let dominatedByParent = runningApps.contains { other in
+                    other.bundleIdentifier != bundleID
+                        && other.activationPolicy == .regular
+                        && bundleID.hasPrefix((other.bundleIdentifier ?? "").components(separatedBy: ".").prefix(2).joined(separator: "."))
+                }
+                guard !dominatedByParent else { continue }
+
+                let item = MenuBarItem(
+                    id: bundleID,
+                    bundleIdentifier: bundleID,
+                    processName: name,
+                    isHidden: false,
+                    icon: app.icon,
+                    hasStatusBar: hasStatusBarIDs.contains(bundleID),
+                    isBackground: true
+                )
+                items.append(item)
+            }
         }
 
         return items.sorted { $0.processName.localizedCaseInsensitiveCompare($1.processName) == .orderedAscending }

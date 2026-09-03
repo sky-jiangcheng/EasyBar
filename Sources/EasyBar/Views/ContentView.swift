@@ -266,17 +266,19 @@ private struct SidebarRow: View {
             Spacer(minLength: 4)
 
             HStack(spacing: 4) {
-                if item.isHidden {
-                    Image(systemName: "eye.slash")
+                Button {
+                    if item.isHidden {
+                        menuBarMonitor.showItem(item)
+                    } else {
+                        menuBarMonitor.hideItem(item)
+                    }
+                } label: {
+                    Image(systemName: item.isHidden ? "eye.slash" : "eye")
                         .font(.caption)
-                        .foregroundStyle(.orange)
-                        .onTapGesture { menuBarMonitor.showItem(item) }
-                } else {
-                    Image(systemName: "eye")
-                        .font(.caption)
-                        .foregroundStyle(.green)
-                        .onTapGesture { menuBarMonitor.hideItem(item) }
+                        .foregroundStyle(item.isHidden ? .orange : .green)
                 }
+                .buttonStyle(.plain)
+                .help(item.isHidden ? "Show" : "Hide")
 
                 Menu {
                     Button("Activate") { menuBarMonitor.activateApp(item) }
