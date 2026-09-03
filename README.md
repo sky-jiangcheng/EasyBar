@@ -100,6 +100,31 @@ swift build
 | v1.12.0 | App 类型检测 + 移除 hide 功能 |
 | v1.13.0 | **里程碑：Status Bar app 跳转修复** |
 
+## CI/CD 发布（App Store）
+
+GitHub Actions 自动构建、签名并上传到 App Store。
+
+- **触发**：推送 `v*` 标签，或手动 `workflow_dispatch`。
+- **流程**：`swift build -c release` → 组装 `.app` → 签名 → `productbuild` 打包 `.pkg` → `altool` 上传。
+- **所需 Secrets**（Repo → Settings → Secrets and variables → Actions）：
+
+| Secret | 内容 |
+|--------|------|
+| `APPLE_DISTRIBUTION_CERT_P12` | Apple Distribution 证书 `.p12`（base64） |
+| `APPLE_DISTRIBUTION_CERT_PASSWORD` | 证书密码 |
+| `APPLE_PROVISIONING_PROFILE` | Mac App Store `.mobileprovision`（base64） |
+| `APP_STORE_CONNECT_API_KEY_ID` | App Store Connect API Key ID |
+| `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID |
+| `APP_STORE_CONNECT_API_KEY` | `.p8` 私钥内容（base64） |
+
+- **可选变量**：`BUNDLE_ID`（默认 `com.jiangcheng.EasyBar`）。
+
+发布：
+
+```bash
+git tag v1.14.0 && git push origin v1.14.0
+```
+
 ## License
 
 MIT
