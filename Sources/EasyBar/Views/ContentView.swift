@@ -208,22 +208,15 @@ private struct SidebarRow: View {
             Spacer()
 
             HStack(spacing: 8) {
-                if menuBarMonitor.canActivateApp(item) {
-                    Button {
-                        menuBarMonitor.activateApp(item)
-                    } label: {
-                        Image(systemName: "arrow.up.forward.app")
-                            .font(.body)
-                            .foregroundStyle(.blue)
-                    }
-                    .buttonStyle(.plain)
-                    .help("Open")
-                } else {
-                    Image(systemName: "exclamationmark.circle")
+                Button {
+                    menuBarMonitor.activateApp(item)
+                } label: {
+                    Image(systemName: "arrow.up.forward.app")
                         .font(.body)
-                        .foregroundStyle(.orange)
-                        .help("Status Bar app - cannot be activated")
+                        .foregroundStyle(.blue)
                 }
+                .buttonStyle(.plain)
+                .help("Open")
 
                 Button {
                     menuBarMonitor.quitApp(item)
