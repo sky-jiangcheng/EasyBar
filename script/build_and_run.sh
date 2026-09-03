@@ -21,8 +21,8 @@ export CLANG_MODULE_CACHE_PATH="$ROOT_DIR/.build/clang-module-cache"
 
 pkill -x "$APP_NAME" >/dev/null 2>&1 || true
 
-swift build --scratch-path "$ROOT_DIR/.build"
-BUILD_BINARY="$(swift build --scratch-path "$ROOT_DIR/.build" --show-bin-path)/$APP_NAME"
+swift build --disable-sandbox --scratch-path "$ROOT_DIR/.build"
+BUILD_BINARY="$(swift build --disable-sandbox --scratch-path "$ROOT_DIR/.build" --show-bin-path)/$APP_NAME"
 
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_MACOS" "$APP_RESOURCES"

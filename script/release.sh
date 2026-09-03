@@ -25,6 +25,10 @@ MIN_SYSTEM_VERSION="${MIN_SYSTEM_VERSION:-14.0}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
+
+# Isolate SPM caches under the project to avoid touching ~/.swiftpm (sandbox-friendly).
+export SWIFTPM_HOME="$ROOT_DIR/.build/swiftpm-home"
+export CLANG_MODULE_CACHE_PATH="$ROOT_DIR/.build/clang-module-cache"
 APP_BUNDLE="$DIST_DIR/$PRODUCT.app"
 APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
@@ -39,8 +43,8 @@ ARCH_FLAGS=()
 for a in $ARCHS; do ARCH_FLAGS+=(--arch "$a"); done
 
 echo "==> Building release binary (archs: $ARCHS)"
-swift build -c release "${ARCH_FLAGS[@]}" --scratch-path "$ROOT_DIR/.build"
-BIN_DIR="$(swift build -c release "${ARCH_FLAGS[@]}" --scratch-path "$ROOT_DIR/.build" --show-bin-path)"
+swift build --disable-sandbox -c release "${ARCH_FLAGS[@]}" --scratch-path "$ROOT_DIR/.build"
+BIN_DIR="$(swift build --disable-sandbox -c release "${ARCH_FLAGS[@]}" --scratch-path "$ROOT_DIR/.build" --show-bin-path)"
 BINARY="$BIN_DIR/$PRODUCT"
 [ -f "$BINARY" ] || { echo "binary not found: $BINARY" >&2; exit 1; }
 
