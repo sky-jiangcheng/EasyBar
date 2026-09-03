@@ -35,7 +35,7 @@
 - Xcode Release 归档成功
 - App Store Connect 导出成功，生成 `build/export/EasyBar.pkg`
 - 导出包使用 `Cloud Managed Apple Distribution`
-- 导出 app 使用 `Mac Team Store Provisioning Profile: com.jiangcheng.EasyBar`
+- 导出 app 使用 `Team Store Provisioning Profile: com.jiangcheng.EasyBar`
 - App Store Connect 上传成功，包正在处理中
 
 ## 创建 App Store Connect App 记录
