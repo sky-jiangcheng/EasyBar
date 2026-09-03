@@ -177,17 +177,9 @@ final class MenuBarMonitor {
     }
 
     func activateApp(_ item: MenuBarItem) {
-        if item.appType == .statusbarOnly {
-            NSWorkspace.shared.launchApplication(
-                withBundleIdentifier: item.bundleIdentifier,
-                options: [],
-                additionalEventParamDescriptor: nil,
-                launchIdentifier: nil
-            )
-        } else {
-            guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }
-            app.activate()
-        }
+        guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }
+        app.unhide()
+        app.activate()
     }
 }
 
