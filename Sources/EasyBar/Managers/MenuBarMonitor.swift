@@ -17,7 +17,6 @@ final class MenuBarMonitor {
         let processName: String
         var isHidden: Bool
         let icon: NSImage?
-        let hasStatusBar: Bool
         let isBackground: Bool
 
         func hash(into hasher: inout Hasher) {
@@ -77,8 +76,7 @@ final class MenuBarMonitor {
     }
 
     func refreshMenuItems() {
-        let appsWithStatus = getAppsWithStatusBar()
-        let items = getMenuItemsFromRunningApps(hasStatusBarIDs: appsWithStatus)
+        let items = getMenuItemsFromRunningApps()
         let hiddenIDs = settingsStore.hiddenBundleIDs
 
         menuBarItems = items.map { item in
@@ -90,26 +88,7 @@ final class MenuBarMonitor {
         }
     }
 
-    private func getAppsWithStatusBar() -> Set<String> {
-        var statusAppIDs = Set<String>()
-
-        if let windows = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[String: Any]] {
-            for window in windows {
-                guard let ownerPID = window[kCGWindowOwnerPID as String] as? pid_t,
-                      let layer = window[kCGWindowLayer as String] as? Int,
-                      layer == 25 else { continue }
-
-                if let app = NSWorkspace.shared.runningApplications.first(where: { $0.processIdentifier == ownerPID }),
-                   let bundleID = app.bundleIdentifier {
-                    statusAppIDs.insert(bundleID)
-                }
-            }
-        }
-
-        return statusAppIDs
-    }
-
-    private func getMenuItemsFromRunningApps(hasStatusBarIDs: Set<String>) -> [MenuBarItem] {
+    private func getMenuItemsFromRunningApps() -> [MenuBarItem] {
         var items: [MenuBarItem] = []
         let runningApps = NSWorkspace.shared.runningApplications
 
@@ -144,6 +123,7 @@ final class MenuBarMonitor {
             "com.apple.wallpaper.agent",
             "com.apple.PowerChime",
             "com.apple.WorkflowKit.ShortcutsViewService",
+            "com.apple.systemuiserver",
         ]
 
         for app in runningApps {
@@ -161,17 +141,13 @@ final class MenuBarMonitor {
             let isAccessory = app.activationPolicy == .accessory
 
             if isRegular {
-                let isHiddenApp = app.isHidden
-                let hasStatusBar = hasStatusBarIDs.contains(bundleID)
-
                 let item = MenuBarItem(
                     id: bundleID,
                     bundleIdentifier: bundleID,
                     processName: name,
                     isHidden: false,
                     icon: app.icon,
-                    hasStatusBar: hasStatusBar,
-                    isBackground: isHiddenApp && !hasStatusBar
+                    isBackground: app.isHidden
                 )
                 items.append(item)
             } else if isAccessory {
@@ -191,7 +167,6 @@ final class MenuBarMonitor {
                     processName: name,
                     isHidden: false,
                     icon: app.icon,
-                    hasStatusBar: hasStatusBarIDs.contains(bundleID),
                     isBackground: true
                 )
                 items.append(item)

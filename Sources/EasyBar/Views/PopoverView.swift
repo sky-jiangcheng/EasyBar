@@ -12,7 +12,6 @@ struct PopoverView: View {
 
     enum FilterType: String, CaseIterable {
         case all = "All"
-        case status = "Status Bar"
         case hidden = "Hidden"
     }
 
@@ -25,8 +24,6 @@ struct PopoverView: View {
         switch selectedFilter {
         case .all:
             items = allItems
-        case .status:
-            items = allItems.filter { $0.hasStatusBar }
         case .hidden:
             items = allItems.filter { $0.isHidden }
         }
@@ -197,11 +194,6 @@ private struct IconRow: View {
                     .lineLimit(1)
                     .foregroundStyle(.primary)
                 HStack(spacing: 4) {
-                    if item.hasStatusBar {
-                        Label("Status", systemImage: "menubar.rectangle")
-                            .font(.caption2)
-                            .foregroundStyle(.blue)
-                    }
                     if item.isBackground {
                         Label("BG", systemImage: "后台运行")
                             .font(.caption2)
@@ -217,23 +209,19 @@ private struct IconRow: View {
             Spacer()
 
             HStack(spacing: 8) {
-                if item.isHidden {
-                    Image(systemName: "eye.slash")
+                Button {
+                    if item.isHidden {
+                        menuBarMonitor.showItem(item)
+                    } else {
+                        menuBarMonitor.hideItem(item)
+                    }
+                } label: {
+                    Image(systemName: item.isHidden ? "eye.slash" : "eye")
                         .font(.caption)
-                        .foregroundStyle(.orange)
-                        .help("Hidden - click to show")
-                        .onTapGesture {
-                            menuBarMonitor.showItem(item)
-                        }
-                } else {
-                    Image(systemName: "eye")
-                        .font(.caption)
-                        .foregroundStyle(.green)
-                        .help("Visible - click to hide")
-                        .onTapGesture {
-                            menuBarMonitor.hideItem(item)
-                        }
+                        .foregroundStyle(item.isHidden ? .orange : .green)
                 }
+                .buttonStyle(.plain)
+                .help(item.isHidden ? "Show" : "Hide")
 
                 Menu {
                     Button("Activate") {

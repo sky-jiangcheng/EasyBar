@@ -9,7 +9,6 @@ struct ContentView: View {
 
     enum SidebarTab: String, CaseIterable {
         case all = "All"
-        case status = "Status Bar"
         case hidden = "Hidden"
     }
 
@@ -17,8 +16,6 @@ struct ContentView: View {
         switch selectedTab {
         case .all:
             menuBarMonitor.menuBarItems
-        case .status:
-            menuBarMonitor.menuBarItems.filter { $0.hasStatusBar }
         case .hidden:
             menuBarMonitor.menuBarItems.filter { $0.isHidden }
         }
@@ -104,7 +101,6 @@ struct ContentView: View {
     private var emptyTitle: String {
         switch selectedTab {
         case .all: return "No Apps"
-        case .status: return "No Status Bar Apps"
         case .hidden: return "No Hidden Apps"
         }
     }
@@ -112,7 +108,6 @@ struct ContentView: View {
     private var emptyIcon: String {
         switch selectedTab {
         case .all: return "app.badge"
-        case .status: return "menubar.rectangle"
         case .hidden: return "eye.slash"
         }
     }
@@ -120,7 +115,6 @@ struct ContentView: View {
     private var emptyDescription: String {
         switch selectedTab {
         case .all: return "No running apps detected."
-        case .status: return "No apps with status bar icons."
         case .hidden: return "No apps are currently hidden."
         }
     }
@@ -186,16 +180,6 @@ struct ContentView: View {
             }
 
             StatCard(
-                title: "Status Bar",
-                value: "\(menuBarMonitor.menuBarItems.filter { $0.hasStatusBar }.count)",
-                icon: "menubar.rectangle",
-                color: .purple,
-                isSelected: selectedTab == .status
-            ) {
-                withAnimation { selectedTab = .status }
-            }
-
-            StatCard(
                 title: "Hidden",
                 value: "\(menuBarMonitor.menuBarItems.filter { $0.isHidden }.count)",
                 icon: "eye.slash",
@@ -209,7 +193,7 @@ struct ContentView: View {
                 title: "Background",
                 value: "\(menuBarMonitor.menuBarItems.filter { $0.isBackground }.count)",
                 icon: "后台运行",
-                color: .secondary,
+                color: .purple,
                 isSelected: false
             ) {
                 withAnimation { selectedTab = .all }
@@ -246,11 +230,6 @@ private struct SidebarRow: View {
                     .lineLimit(1)
 
                 HStack(spacing: 4) {
-                    if item.hasStatusBar {
-                        Image(systemName: "menubar.rectangle")
-                            .font(.caption2)
-                            .foregroundStyle(.blue)
-                    }
                     if item.isBackground {
                         Image(systemName: "后台运行")
                             .font(.caption2)
