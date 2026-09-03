@@ -30,43 +30,21 @@ struct ContentView: View {
 
     private var sidebar: some View {
         List {
-            Section("Menu Bar") {
-                ForEach(menuBarMonitor.menuBarItems) { item in
-                    HStack {
-                        if let icon = item.icon {
-                            Image(nsImage: icon)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                        } else {
-                            Image(systemName: "app.fill")
-                                .frame(width: 20, height: 20)
-                        }
+            Section("Status Bar Apps") {
+                ForEach(menuBarMonitor.menuBarItems.filter { $0.hasStatusBar }) { item in
+                    SidebarRow(item: item)
+                }
+            }
 
-                        VStack(alignment: .leading) {
-                            Text(item.processName)
-                                .font(.body)
-                            Text(item.bundleIdentifier)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+            Section("Foreground Apps") {
+                ForEach(menuBarMonitor.menuBarItems.filter { !$0.hasStatusBar && !$0.isBackground }) { item in
+                    SidebarRow(item: item)
+                }
+            }
 
-                        Spacer()
-
-                        if item.isHidden {
-                            Image(systemName: "eye.slash")
-                                .foregroundStyle(.orange)
-                        }
-                    }
-                    .contextMenu {
-                        Button(item.isHidden ? "Show" : "Hide") {
-                            if item.isHidden {
-                                menuBarMonitor.showItem(item)
-                            } else {
-                                menuBarMonitor.hideItem(item)
-                            }
-                        }
-                    }
+            Section("Background Apps") {
+                ForEach(menuBarMonitor.menuBarItems.filter { $0.isBackground }) { item in
+                    SidebarRow(item: item)
                 }
             }
         }
@@ -106,18 +84,95 @@ struct ContentView: View {
                     icon: "list.bullet"
                 )
                 StatCard(
+                    title: "Status Bar",
+                    value: "\(menuBarMonitor.menuBarItems.filter { $0.hasStatusBar }.count)",
+                    icon: "menubar.rectangle"
+                )
+                StatCard(
+                    title: "Foreground",
+                    value: "\(menuBarMonitor.menuBarItems.filter { !$0.hasStatusBar && !$0.isBackground }.count)",
+                    icon: "macwindow"
+                )
+                StatCard(
+                    title: "Background",
+                    value: "\(menuBarMonitor.menuBarItems.filter { $0.isBackground }.count)",
+                    icon: "后台运行"
+                )
+                StatCard(
                     title: "Hidden",
                     value: "\(menuBarMonitor.menuBarItems.filter { $0.isHidden }.count)",
                     icon: "eye.slash"
                 )
-                StatCard(
-                    title: "Visible",
-                    value: "\(menuBarMonitor.menuBarItems.filter { !$0.isHidden }.count)",
-                    icon: "eye"
-                )
             }
         }
         .padding()
+    }
+}
+
+private struct SidebarRow: View {
+    @Environment(MenuBarMonitor.self) private var menuBarMonitor
+
+    let item: MenuBarMonitor.MenuBarItem
+
+    var body: some View {
+        HStack {
+            if let icon = item.icon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20, height: 20)
+            } else {
+                Image(systemName: "app.fill")
+                    .frame(width: 20, height: 20)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.processName)
+                    .font(.body)
+                HStack(spacing: 4) {
+                    if item.hasStatusBar {
+                        Image(systemName: "menubar.rectangle")
+                            .font(.caption2)
+                            .foregroundStyle(.blue)
+                    }
+                    if item.isBackground {
+                        Image(systemName: "后台运行")
+                            .font(.caption2)
+                            .foregroundStyle(.purple)
+                    }
+                    Text(item.bundleIdentifier)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer()
+
+            if item.isHidden {
+                Image(systemName: "eye.slash")
+                    .foregroundStyle(.orange)
+            }
+        }
+        .contextMenu {
+            Button(item.isHidden ? "Show" : "Hide") {
+                if item.isHidden {
+                    menuBarMonitor.showItem(item)
+                } else {
+                    menuBarMonitor.hideItem(item)
+                }
+            }
+            Divider()
+            Button("Activate") {
+                menuBarMonitor.activateApp(item)
+            }
+            Button("Quit") {
+                menuBarMonitor.quitApp(item)
+            }
+            Divider()
+            Button("Force Quit", role: .destructive) {
+                menuBarMonitor.forceQuitApp(item)
+            }
+        }
     }
 }
 

@@ -17,6 +17,8 @@ final class MenuBarMonitor {
         let processName: String
         var isHidden: Bool
         let icon: NSImage?
+        let hasStatusBar: Bool
+        let isBackground: Bool
 
         func hash(into hasher: inout Hasher) {
             hasher.combine(id)
@@ -75,7 +77,8 @@ final class MenuBarMonitor {
     }
 
     func refreshMenuItems() {
-        let items = getMenuItemsFromRunningApps()
+        let appsWithStatus = getAppsWithStatusBar()
+        let items = getMenuItemsFromRunningApps(hasStatusBarIDs: appsWithStatus)
         let hiddenIDs = settingsStore.hiddenBundleIDs
 
         menuBarItems = items.map { item in
@@ -87,7 +90,48 @@ final class MenuBarMonitor {
         }
     }
 
-    private func getMenuItemsFromRunningApps() -> [MenuBarItem] {
+    private func getAppsWithStatusBar() -> Set<String> {
+        var statusAppIDs = Set<String>()
+
+        if let windows = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[String: Any]] {
+            for window in windows {
+                guard let ownerPID = window[kCGWindowOwnerPID as String] as? pid_t,
+                      let layer = window[kCGWindowLayer as String] as? Int,
+                      layer == 25 else { continue }
+
+                if let app = NSWorkspace.shared.runningApplications.first(where: { $0.processIdentifier == ownerPID }),
+                   let bundleID = app.bundleIdentifier {
+                    statusAppIDs.insert(bundleID)
+                }
+            }
+        }
+
+        for app in NSWorkspace.shared.runningApplications {
+            guard app.activationPolicy == .regular else { continue }
+            if app.activationPolicy == .regular && !app.isTerminated {
+                if let windows = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[String: Any]] {
+                    for window in windows {
+                        guard let ownerPID = window[kCGWindowOwnerPID as String] as? pid_t,
+                              ownerPID == app.processIdentifier else { continue }
+
+                        let bounds = window[kCGWindowBounds as String] as? [String: Any] ?? [:]
+                        let y = bounds["Y"] as? Double ?? 100
+                        let h = bounds["Height"] as? Double ?? 0
+
+                        if y < 40 && h < 40 {
+                            if let bundleID = app.bundleIdentifier {
+                                statusAppIDs.insert(bundleID)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return statusAppIDs
+    }
+
+    private func getMenuItemsFromRunningApps(hasStatusBarIDs: Set<String>) -> [MenuBarItem] {
         var items: [MenuBarItem] = []
         let runningApps = NSWorkspace.shared.runningApplications
 
@@ -98,12 +142,17 @@ final class MenuBarMonitor {
                 continue
             }
 
+            let isHiddenApp = app.isHidden
+            let hasStatusBar = hasStatusBarIDs.contains(bundleID)
+
             let item = MenuBarItem(
                 id: bundleID,
                 bundleIdentifier: bundleID,
                 processName: name,
                 isHidden: false,
-                icon: app.icon
+                icon: app.icon,
+                hasStatusBar: hasStatusBar,
+                isBackground: isHiddenApp && !hasStatusBar
             )
             items.append(item)
         }
@@ -138,6 +187,21 @@ final class MenuBarMonitor {
         menuBarItems[index].isHidden = false
 
         scheduleAutoHide(for: item)
+    }
+
+    func quitApp(_ item: MenuBarItem) {
+        guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }
+        app.terminate()
+    }
+
+    func forceQuitApp(_ item: MenuBarItem) {
+        guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }
+        app.forceTerminate()
+    }
+
+    func activateApp(_ item: MenuBarItem) {
+        guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }
+        app.activate()
     }
 
     private func scheduleAutoHide(for item: MenuBarItem) {
