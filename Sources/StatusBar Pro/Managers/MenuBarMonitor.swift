@@ -89,6 +89,7 @@ final class MenuBarMonitor {
 
         let skipBundleIDs: Set<String> = [
             "com.jiangcheng.MacStatusApp",
+            "com.jiangcheng.EasyBar",
             "com.apple.Spotlight",
             "com.apple.WindowManager",
             "com.apple.notificationcenterui",

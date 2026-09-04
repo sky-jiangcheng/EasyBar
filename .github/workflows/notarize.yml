@@ -71,7 +71,7 @@ jobs:
           CHANNEL: devid
           APP_VERSION: ${{ steps.version.outputs.version }}
           BUILD_NUMBER: ${{ steps.version.outputs.build }}
-          BUNDLE_ID: ${{ vars.BUNDLE_ID || 'com.jiangcheng.MacStatusApp' }}
+          BUNDLE_ID: ${{ vars.BUNDLE_ID_DIRECT || 'com.jiangcheng.EasyBar' }}
         run: bash script/release.sh
 
       - name: Create signed DMG

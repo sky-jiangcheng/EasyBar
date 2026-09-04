@@ -104,10 +104,14 @@ swift build
 
 推送 `v*` 标签会**同时**触发两条流水线：App Store 版和官网 Developer ID 版。
 
-| 渠道 | Workflow | 沙盒 | Quit / Force Quit | 产物 |
-|------|----------|------|-------------------|------|
-| Mac App Store | `release.yml` | 开（MAS 强制） | 编译期移除 | `.pkg` → altool 上传 |
-| 官网自分发 | `notarize.yml` | 关（Hardened Runtime） | 完整可用 | `.dmg` → 公证 + 装订 |
+| 渠道 | Workflow | Bundle ID | 沙盒 | Quit / Force Quit | 产物 |
+|------|----------|-----------|------|-------------------|------|
+| Mac App Store | `release.yml` | `com.jiangcheng.MacStatusApp` | 开（MAS 强制） | 编译期移除 | `.pkg` → altool 上传 |
+| 官网自分发 | `notarize.yml` | `com.jiangcheng.EasyBar` | 关（Hardened Runtime） | 完整可用 | `.dmg` → 公证 + 装订 |
+
+两版 Bundle ID 不同，可共存于同一台机器。MAS 的 ID 已在 App Store 注册，不可更改；官网版独立使用 `com.jiangcheng.EasyBar`。Developer ID 签名无需 provisioning profile 或预先注册 App ID，有 Developer ID Application 证书即可。
+
+两版设置不互通（`UserDefaults.standard` 随 Bundle ID 隔离）。
 
 沙盒下 `NSRunningApplication.terminate()` 被 macOS 拦截，且用户在「隐私与安全性」无对应开关可授权，故 MAS 版用 `-D MAC_APP_STORE` 编译期剔除该功能。
 
@@ -124,7 +128,12 @@ swift build
 | `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID |
 | `APP_STORE_CONNECT_API_KEY` | `.p8` 私钥内容（base64） |
 
-可选变量：`BUNDLE_ID`（默认 `com.jiangcheng.MacStatusApp`）。
+可选变量（Repo → Settings → Secrets and variables → Actions → Variables）：
+
+| Variable | 默认值 | 作用 |
+|----------|--------|------|
+| `BUNDLE_ID` | `com.jiangcheng.MacStatusApp` | MAS 版 Bundle ID |
+| `BUNDLE_ID_DIRECT` | `com.jiangcheng.EasyBar` | 官网版 Bundle ID |
 
 ### 发布
 
