@@ -52,7 +52,8 @@ StatusBar Pro/
 ├── Package.swift
 ├── script/
 │   └── build_and_run.sh
-└── docs/
+└── docs/                  # GitHub Pages（中英双语）
+    ├── assets/            # site.css + i18n.js
     ├── index.html
     ├── privacy/
     └── support/
