@@ -100,30 +100,39 @@ swift build
 | v1.12.0 | App 类型检测 + 移除 hide 功能 |
 | v1.13.0 | **里程碑：Status Bar app 跳转修复** |
 
-## CI/CD 发布（App Store）
+## CI/CD 发布（双轨）
 
-GitHub Actions 自动构建、签名并上传到 App Store。
+推送 `v*` 标签会**同时**触发两条流水线：App Store 版和官网 Developer ID 版。
 
-- **触发**：推送 `v*` 标签，或手动 `workflow_dispatch`。
-- **流程**：`swift build -c release` → 组装 `.app` → 签名 → `productbuild` 打包 `.pkg` → `altool` 上传。
-- **所需 Secrets**（Repo → Settings → Secrets and variables → Actions）：
+| 渠道 | Workflow | 沙盒 | Quit / Force Quit | 产物 |
+|------|----------|------|-------------------|------|
+| Mac App Store | `release.yml` | 开（MAS 强制） | 编译期移除 | `.pkg` → altool 上传 |
+| 官网自分发 | `notarize.yml` | 关（Hardened Runtime） | 完整可用 | `.dmg` → 公证 + 装订 |
 
-| Secret | 内容 |
+沙盒下 `NSRunningApplication.terminate()` 被 macOS 拦截，且用户在「隐私与安全性」无对应开关可授权，故 MAS 版用 `-D MAC_APP_STORE` 编译期剔除该功能。
+
+### 所需 Secrets（Repo → Settings → Secrets and variables → Actions）
+
+| Secret | 用途 |
 |--------|------|
-| `APPLE_DISTRIBUTION_CERT_P12` | Apple Distribution 证书 `.p12`（base64） |
-| `APPLE_DISTRIBUTION_CERT_PASSWORD` | 证书密码 |
+| `APPLE_DISTRIBUTION_CERT_P12` | Apple Distribution 证书 `.p12`（base64）— MAS |
+| `APPLE_DISTRIBUTION_CERT_PASSWORD` | 该证书密码 |
 | `APPLE_PROVISIONING_PROFILE` | Mac App Store `.mobileprovision`（base64） |
-| `APP_STORE_CONNECT_API_KEY_ID` | App Store Connect API Key ID |
+| `DEVELOPER_ID_CERT_P12` | Developer ID Application 证书 `.p12`（base64）— 官网版 |
+| `DEVELOPER_ID_CERT_PASSWORD` | 该证书密码 |
+| `APP_STORE_CONNECT_API_KEY_ID` | API Key ID（两条流水线共用） |
 | `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID |
 | `APP_STORE_CONNECT_API_KEY` | `.p8` 私钥内容（base64） |
 
-- **可选变量**：`BUNDLE_ID`（默认 `com.jiangcheng.MacStatusApp`）。
+可选变量：`BUNDLE_ID`（默认 `com.jiangcheng.MacStatusApp`）。
 
-发布：
+### 发布
 
 ```bash
 git tag v1.14.0 && git push origin v1.14.0
 ```
+
+DMG 从 Actions 的 artifact 下载后放官网。公证后用户首次打开仍会看到 Gatekeeper 提示，指引「系统设置 → 隐私与安全性 → 仍要打开」即可。
 
 ## License
 

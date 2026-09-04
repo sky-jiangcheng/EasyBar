@@ -166,6 +166,7 @@ final class MenuBarMonitor {
         return items.sorted { $0.processName.localizedCaseInsensitiveCompare($1.processName) == .orderedAscending }
     }
 
+#if !MAC_APP_STORE
     func quitApp(_ item: MenuBarItem) {
         guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }
         app.terminate()
@@ -175,6 +176,7 @@ final class MenuBarMonitor {
         guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }
         app.forceTerminate()
     }
+#endif
 
     func activateApp(_ item: MenuBarItem) {
         guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }

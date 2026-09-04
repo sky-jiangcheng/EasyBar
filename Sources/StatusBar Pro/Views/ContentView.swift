@@ -218,6 +218,7 @@ private struct SidebarRow: View {
                 .buttonStyle(.plain)
                 .help("Open")
 
+#if !MAC_APP_STORE
                 Button {
                     menuBarMonitor.quitApp(item)
                 } label: {
@@ -237,6 +238,7 @@ private struct SidebarRow: View {
                 }
                 .buttonStyle(.plain)
                 .help("Force Quit")
+#endif
             }
         }
         .padding(.vertical, 6)

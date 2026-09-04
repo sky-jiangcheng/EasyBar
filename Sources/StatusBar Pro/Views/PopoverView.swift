@@ -184,6 +184,7 @@ private struct IconRow: View {
                 .buttonStyle(.plain)
                 .help("Open")
 
+#if !MAC_APP_STORE
                 Button {
                     menuBarMonitor.quitApp(item)
                 } label: {
@@ -203,6 +204,7 @@ private struct IconRow: View {
                 }
                 .buttonStyle(.plain)
                 .help("Force Quit")
+#endif
             }
         }
         .padding(.horizontal, 16)

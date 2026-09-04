@@ -1,19 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Build, sign, and package StatusBar Pro for Mac App Store submission.
+# Build, sign, and package StatusBar Pro.
+#
+# Distribution channel (CHANNEL):
+#   mas   - Mac App Store: sandbox ON, Quit/Force Quit compiled out, output .pkg
+#   devid - Developer ID:  hardened runtime, sandbox OFF, full features, output .app (wrap into .dmg separately)
 #
 # Required env:
-#   APP_VERSION        - marketing version, e.g. 1.14.0
-#   SIGNING_IDENTITY   - codesign identity, e.g. "Apple Distribution: ... (TEAMID)"
+#   SIGNING_IDENTITY   - codesign identity
+#                        mas:   "Apple Distribution: ... (TEAMID)" or "3rd Party Mac Developer Application: ..."
+#                        devid: "Developer ID Application: ... (TEAMID)"
 # Optional env:
+#   CHANNEL            - mas | devid, default mas
+#   APP_VERSION        - marketing version, e.g. 1.14.0
 #   BUILD_NUMBER       - build version, default 1
 #   BUNDLE_ID          - default com.jiangcheng.MacStatusApp
 #   PRODUCT            - app/product name, default "StatusBar Pro"
 #   ARCHS              - space-separated archs, default "arm64 x86_64" (universal)
-#   INSTALLER_IDENTITY - pkg signing identity, defaults to SIGNING_IDENTITY
-#   PROVISIONING_PROFILE - path to .mobileprovision to embed, optional
+#   INSTALLER_IDENTITY - pkg signing identity (mas only), defaults to SIGNING_IDENTITY
+#   PROVISIONING_PROFILE - path to .mobileprovision to embed (mas only)
 
+CHANNEL="${CHANNEL:-mas}"
 PRODUCT="${PRODUCT:-StatusBar Pro}"
 BUNDLE_ID="${BUNDLE_ID:-com.jiangcheng.MacStatusApp}"
 APP_VERSION="${APP_VERSION:-0.0.0}"
@@ -22,6 +30,22 @@ ARCHS="${ARCHS:-arm64 x86_64}"
 SIGNING_IDENTITY="${SIGNING_IDENTITY:?SIGNING_IDENTITY is required}"
 INSTALLER_IDENTITY="${INSTALLER_IDENTITY:-$SIGNING_IDENTITY}"
 MIN_SYSTEM_VERSION="${MIN_SYSTEM_VERSION:-14.0}"
+
+case "$CHANNEL" in
+  mas)
+    ENTITLEMENTS_NAME="StatusBar Pro.entitlements"
+    # Sandboxed MAS build: strip Quit / Force Quit (NSRunningApplication is blocked in sandbox).
+    SWIFT_DEFINES=(-Xswiftc -D -Xswiftc MAC_APP_STORE)
+    ;;
+  devid)
+    ENTITLEMENTS_NAME="DeveloperID.entitlements"
+    SWIFT_DEFINES=()
+    ;;
+  *)
+    echo "unknown CHANNEL: $CHANNEL (expected mas or devid)" >&2
+    exit 1
+    ;;
+esac
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
@@ -34,17 +58,18 @@ APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
 APP_RESOURCES="$APP_CONTENTS/Resources"
 PKG_PATH="$DIST_DIR/$PRODUCT.pkg"
-
-# App Store build requires sandbox enabled; local dev uses EasyBar.entitlements (sandbox off).
-ENTITLEMENTS="$ROOT_DIR/Sources/StatusBar Pro/Resources/StatusBar Pro.entitlements"
+ENTITLEMENTS="$ROOT_DIR/Sources/StatusBar Pro/Resources/$ENTITLEMENTS_NAME"
 APPCONSET="$ROOT_DIR/Sources/StatusBar Pro/Resources/Assets.xcassets/AppIcon.appiconset"
 
 ARCH_FLAGS=()
 for a in $ARCHS; do ARCH_FLAGS+=(--arch "$a"); done
 
-echo "==> Building release binary (archs: $ARCHS)"
-swift build --disable-sandbox -c release "${ARCH_FLAGS[@]}" --scratch-path "$ROOT_DIR/.build"
-BIN_DIR="$(swift build --disable-sandbox -c release "${ARCH_FLAGS[@]}" --scratch-path "$ROOT_DIR/.build" --show-bin-path)"
+# bash 3.2 (macOS) safe expansion of a possibly empty array under `set -u`.
+DEFINES=(${SWIFT_DEFINES[@]+"${SWIFT_DEFINES[@]}"})
+
+echo "==> Building release binary (channel: $CHANNEL, archs: $ARCHS)"
+swift build --disable-sandbox -c release "${ARCH_FLAGS[@]}" "${DEFINES[@]}" --scratch-path "$ROOT_DIR/.build"
+BIN_DIR="$(swift build --disable-sandbox -c release "${ARCH_FLAGS[@]}" "${DEFINES[@]}" --scratch-path "$ROOT_DIR/.build" --show-bin-path)"
 BINARY="$BIN_DIR/$PRODUCT"
 [ -f "$BINARY" ] || { echo "binary not found: $BINARY" >&2; exit 1; }
 
@@ -94,16 +119,26 @@ ICONSET="$DIST_DIR/AppIcon.iconset"
 rm -rf "$ICONSET"
 cp -R "$APPCONSET" "$ICONSET"
 iconutil -c icns "$ICONSET" -o "$APP_RESOURCES/AppIcon.icns"
+rm -rf "$ICONSET"
 
-if [ -n "${PROVISIONING_PROFILE:-}" ] && [ -f "$PROVISIONING_PROFILE" ]; then
+if [ "$CHANNEL" = "mas" ] && [ -n "${PROVISIONING_PROFILE:-}" ] && [ -f "$PROVISIONING_PROFILE" ]; then
   cp "$PROVISIONING_PROFILE" "$APP_CONTENTS/embedded.provisionprofile"
 fi
 
 echo "==> Codesigning with: $SIGNING_IDENTITY"
-codesign --force --sign "$SIGNING_IDENTITY" --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
+if [ "$CHANNEL" = "devid" ]; then
+  # Hardened runtime + secure timestamp are mandatory for Developer ID notarization.
+  codesign --force --sign "$SIGNING_IDENTITY" --entitlements "$ENTITLEMENTS" \
+    --options runtime --timestamp "$APP_BUNDLE"
+else
+  codesign --force --sign "$SIGNING_IDENTITY" --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
+fi
 codesign --verify --deep --strict "$APP_BUNDLE"
 
-echo "==> Packaging .pkg with: $INSTALLER_IDENTITY"
-productbuild --component "$APP_BUNDLE" /Applications --sign "$INSTALLER_IDENTITY" "$PKG_PATH"
-
-echo "==> Done: $PKG_PATH"
+if [ "$CHANNEL" = "mas" ]; then
+  echo "==> Packaging .pkg with: $INSTALLER_IDENTITY"
+  productbuild --component "$APP_BUNDLE" /Applications --sign "$INSTALLER_IDENTITY" "$PKG_PATH"
+  echo "==> Done: $PKG_PATH"
+else
+  echo "==> Done: $APP_BUNDLE"
+fi
