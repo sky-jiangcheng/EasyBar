@@ -59,11 +59,11 @@ struct IconOrderView: View {
                                     }
                             }
                             .onMove { source, destination in
-                                // customOrder may contain IDs of apps that have quit;
-                                // visible-list indices only align with the filtered
-                                // list. Prune first, then move, then keep pruned IDs
-                                // out of persistence until they reappear (syncOrder).
-                                let visibleIDs = orderedItems.map(\.id)
+                                // onMove reports indices into the visible ordered
+                                // list. Keep IDs not currently running after the
+                                // visible entries so their relative order is
+                                // preserved if the apps return.
+                                let visibleIDs = Set(orderedItems.map(\.id))
                                 let hiddenIDs = customOrder.filter { !visibleIDs.contains($0) }
                                 customOrder = orderedItems.map(\.id)
                                 customOrder.move(fromOffsets: source, toOffset: destination)

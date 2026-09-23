@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class AggregationPanel {
+final class AggregationPanel: NSObject, NSWindowDelegate {
     /// Single source of truth for the panel grid geometry: the window sizing
     /// code here and the grid rendering in AggregationView both read these
     /// values, so the two can never drift apart.
@@ -22,11 +22,12 @@ final class AggregationPanel {
     var onHoverChange: ((Bool) -> Void)?
 
     private var panel: NSPanel?
+    private var isOrderedIn = false
     private let menuBarMonitor: MenuBarMonitor
     private let settingsStore: SettingsStore
 
     var isShown: Bool {
-        panel?.isVisible ?? false
+        isOrderedIn
     }
 
     init(menuBarMonitor: MenuBarMonitor, settingsStore: SettingsStore) {
@@ -39,6 +40,7 @@ final class AggregationPanel {
             // Panel already exists: re-fit to the current app count and bring it front.
             updatePosition()
             panel?.orderFront(nil)
+            isOrderedIn = true
             return
         }
 
@@ -58,6 +60,8 @@ final class AggregationPanel {
         panel.titlebarAppearsTransparent = true
         panel.titleVisibility = .hidden
         panel.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.95)
+        panel.isReleasedWhenClosed = false
+        panel.delegate = self
 
         // The container view owns the tracking area, so AppKit-level hover
         // events reach this class even though the content itself is SwiftUI.
@@ -81,10 +85,16 @@ final class AggregationPanel {
 
         panel.orderFront(nil)
         self.panel = panel
+        isOrderedIn = true
     }
 
     func hide() {
         panel?.orderOut(nil)
+        isOrderedIn = false
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        isOrderedIn = false
     }
 
     func toggle() {

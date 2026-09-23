@@ -104,4 +104,69 @@ final class LogicTests: XCTestCase {
 
         XCTAssertEqual(sorted.map(\.id), ["a", "b"])
     }
+
+    // MARK: - Mode policy
+
+    func testAggregationModeAutomaticShowPolicy() {
+        XCTAssertTrue(SettingsStore.AggregationMode.aggregation.showsAggregationPanelAutomatically)
+        XCTAssertFalse(SettingsStore.AggregationMode.normal.showsAggregationPanelAutomatically)
+        XCTAssertFalse(SettingsStore.AggregationMode.disabled.showsAggregationPanelAutomatically)
+    }
+
+    func testAggregationModeAutoHidePolicy() {
+        XCTAssertTrue(SettingsStore.AggregationMode.aggregation.usesAggregationAutoHide)
+        XCTAssertFalse(SettingsStore.AggregationMode.normal.usesAggregationAutoHide)
+        XCTAssertFalse(SettingsStore.AggregationMode.disabled.usesAggregationAutoHide)
+    }
+
+    // MARK: - Custom order ownership
+
+    func testCustomOrderOnlyContainsExplicitlyOrderedItems() {
+        let store = SettingsStore()
+        store.customOrder = ["b"]
+        let monitor = MenuBarMonitor(settingsStore: store)
+
+        let sorted = monitor.sortedByCustomOrder([
+            item("b", "Banana"),
+            item("a", "Apple"),
+            item("c", "Cherry"),
+        ])
+
+        XCTAssertEqual(sorted.map(\.id), ["b", "a", "c"])
+        XCTAssertEqual(store.customOrder, ["b"])
+        XCTAssertEqual(
+            sorted.filter { !store.customOrder.contains($0.id) }.map(\.id),
+            ["a", "c"]
+        )
+    }
+
+    // MARK: - MenuBarItem equality
+
+    func testMenuBarItemEqualityDetectsPresentationChanges() {
+        let icon = NSImage(size: NSSize(width: 16, height: 16))
+        let original = MenuBarMonitor.MenuBarItem(
+            id: "com.example.app",
+            bundleIdentifier: "com.example.app",
+            processName: "Example",
+            icon: icon,
+            appType: .statusbarOnly
+        )
+        let renamed = MenuBarMonitor.MenuBarItem(
+            id: "com.example.app",
+            bundleIdentifier: "com.example.app",
+            processName: "Renamed Example",
+            icon: icon,
+            appType: .statusbarOnly
+        )
+        let reclassified = MenuBarMonitor.MenuBarItem(
+            id: "com.example.app",
+            bundleIdentifier: "com.example.app",
+            processName: "Example",
+            icon: icon,
+            appType: .dockOnly
+        )
+
+        XCTAssertNotEqual(original, renamed)
+        XCTAssertNotEqual(original, reclassified)
+    }
 }

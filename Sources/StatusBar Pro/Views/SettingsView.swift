@@ -244,10 +244,5 @@ struct IconOrderTab: View {
                 l10n: settings.l10n
             )
         }
-        .onChange(of: menuBarMonitor.menuBarItems) { _, newItems in
-            // Newly detected apps slot in after user-ordered icons instead of
-            // being silently ignored by the ordering UI.
-            settings.syncOrder(with: newItems.map(\.id))
-        }
     }
 }

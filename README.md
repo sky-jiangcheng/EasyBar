@@ -132,7 +132,7 @@ swift build
 | v1.12.0 | App 类型检测 + 移除 hide 功能 |
 | v1.13.0 | **里程碑：Status Bar app 跳转修复** |
 | v1.14.0 | 代码 review 修复（P0×3/P1×7/P2×3 + 回归 9 项）；外观主题；多语言（中/日/英/德/西） |
-| 待发布 (v1.15.0) | 移除无用途的辅助功能权限请求（改为只读状态展示，去掉常驻定时轮询）；修复 AppIcon `Contents.json` 非法 size；排序页支持从「未排序」拖入；构建脚本与文档一致性修复 |
+| v1.15.0 | 修复排序页自动写入自定义顺序导致「未排序」失效；区分 Normal/Disabled 模式策略；保留菜单项名称、类型与图标更新；修正聚合面板可见性状态；完善测试与构建验证 |
 
 ## CI/CD 发布（双轨）
 
@@ -178,7 +178,7 @@ swift build
 ### 发布
 
 ```bash
-git tag v1.14.0 && git push origin v1.14.0
+git tag v1.15.0 && git push origin v1.15.0
 ```
 
 DMG 从 Actions 的 artifact 下载后放官网。公证后用户首次打开仍会看到 Gatekeeper 提示，指引「系统设置 → 隐私与安全性 → 仍要打开」即可。

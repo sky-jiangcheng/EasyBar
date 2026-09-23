@@ -18,6 +18,20 @@ final class SettingsStore {
         case aggregation = "Aggregation"
         case normal = "Normal"
         case disabled = "Disabled"
+
+        /// Whether a newly detected Status Bar app may open the floating panel
+        /// automatically. Normal mode remains click-driven; Disabled mode
+        /// requires an explicit action from the status item or context menu.
+        var showsAggregationPanelAutomatically: Bool {
+            self == .aggregation
+        }
+
+        /// Whether a manually shown panel should auto-hide. Normal mode has no
+        /// automatic show lifecycle, so the countdown belongs only to
+        /// Aggregation mode.
+        var usesAggregationAutoHide: Bool {
+            self == .aggregation
+        }
     }
 
     enum AggregationIconType: String, CaseIterable, Identifiable {
@@ -116,21 +130,10 @@ final class SettingsStore {
         }
     }
 
-    /// Appends IDs not yet in the custom order, keeping their relative position.
-    /// Called by the Order tab when a newly detected app should slot in after
-    /// user-ordered icons instead of being ignored.
-    func syncOrder(with detectedIDs: [String]) {
-        var changed = false
-        for id in detectedIDs where !customOrder.contains(id) {
-            customOrder.append(id)
-            changed = true
-        }
-        if changed { save() }
-    }
-
     /// Drops custom-order entries whose IDs are absent from `detectedIDs`.
     /// Called at termination so quit apps stop accumulating in UserDefaults;
-    /// a returning app re-enters via `syncOrder` on the next scan.
+    /// a returning app stays in the Unordered section until the user moves it
+    /// back into the explicit custom order.
     func pruneOrder(keeping detectedIDs: [String]) {
         let keep = Set(detectedIDs)
         let pruned = customOrder.filter { keep.contains($0) }

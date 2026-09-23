@@ -183,7 +183,9 @@ final class StatusBarManager {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                guard let self, self.settingsStore.aggregationMode == .aggregation else { return }
+                guard let self,
+                      self.settingsStore.aggregationMode.showsAggregationPanelAutomatically
+                else { return }
                 // Respect a recent manual hide (grace = two scan intervals).
                 if let hiddenAt = self.manualHideDate,
                    Date().timeIntervalSince(hiddenAt) < max(self.settingsStore.refreshInterval * 2, 4) {
@@ -250,7 +252,7 @@ final class StatusBarManager {
         guard aggregationAutoHideTimer == nil,
               remainingAutoHideDelay > 0,
               aggregationPanel.isShown,
-              settingsStore.aggregationMode == .aggregation else { return }
+              settingsStore.aggregationMode.usesAggregationAutoHide else { return }
         armAggregationAutoHideTimer(withTimeInterval: max(remainingAutoHideDelay, 1))
     }
 
@@ -263,7 +265,7 @@ final class StatusBarManager {
             Task { @MainActor in
                 guard let self, self.aggregationPanel.isShown else { return }
                 // Only auto-hide in automatic mode; a manual toggle stays until closed.
-                guard self.settingsStore.aggregationMode == .aggregation else { return }
+                guard self.settingsStore.aggregationMode.usesAggregationAutoHide else { return }
                 self.aggregationPanel.hide()
                 self.remainingAutoHideDelay = 0
             }
@@ -333,6 +335,9 @@ final class StatusBarManager {
             // Suppress the next automatic show so a manually hidden panel does
             // not pop right back up on the following scan cycle.
             manualHideDate = Date()
+            aggregationAutoHideTimer?.invalidate()
+            aggregationAutoHideTimer = nil
+            remainingAutoHideDelay = 0
             aggregationPanel.hide()
         } else {
             manualHideDate = nil

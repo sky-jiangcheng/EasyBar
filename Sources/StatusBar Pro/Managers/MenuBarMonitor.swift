@@ -25,10 +25,16 @@ final class MenuBarMonitor {
 
         func hash(into hasher: inout Hasher) {
             hasher.combine(id)
+            hasher.combine(processName)
+            hasher.combine(appType)
         }
 
         static func == (lhs: MenuBarItem, rhs: MenuBarItem) -> Bool {
             lhs.id == rhs.id
+                && lhs.bundleIdentifier == rhs.bundleIdentifier
+                && lhs.processName == rhs.processName
+                && lhs.appType == rhs.appType
+                && lhs.icon === rhs.icon
         }
     }
 
@@ -82,7 +88,6 @@ final class MenuBarMonitor {
     func refreshMenuItems() {
         let newItems = getMenuItemsFromRunningApps()
         let oldItems = menuBarItems
-        guard oldItems != newItems else { return }
         menuBarItems = newItems
 
         // Auto-show signal: fire only when a NEW Status Bar app appears (the set
@@ -90,6 +95,10 @@ final class MenuBarMonitor {
         // an empty or shrinking panel at the user.
         let oldStatusApps = Set(oldItems.filter { $0.appType == .statusbarOnly }.map(\.id))
         let newStatusApps = Set(newItems.filter { $0.appType == .statusbarOnly }.map(\.id))
+        let membershipChanged = oldStatusApps != newStatusApps
+        let presentationChanged = oldItems != newItems
+        guard membershipChanged || presentationChanged else { return }
+
         if !newStatusApps.isEmpty && !oldStatusApps.isSuperset(of: newStatusApps) {
             NotificationCenter.default.post(name: .aggregationShouldShow, object: nil)
         }
@@ -250,8 +259,12 @@ final class MenuBarMonitor {
             // replaces the deprecated launchApplication(withBundleIdentifier:).
             let config = NSWorkspace.OpenConfiguration()
             config.activates = true
-            let url = app.bundleURL ?? (try? NSWorkspace.shared.urlForApplication(withBundleIdentifier: item.bundleIdentifier))
-            guard let url else { return }
+            guard let url = app.bundleURL ?? NSWorkspace.shared.urlForApplication(withBundleIdentifier: item.bundleIdentifier) else {
+                // Some accessory processes have no bundle URL. `activate()` is
+                // best-effort for those, but better than silently doing nothing.
+                app.activate()
+                return
+            }
             Task {
                 _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: config)
             }
