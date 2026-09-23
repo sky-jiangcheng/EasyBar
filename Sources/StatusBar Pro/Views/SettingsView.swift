@@ -7,9 +7,22 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             GeneralSettingsTab(
+                l10n: settings.l10n,
                 aggregationMode: Binding(
                     get: { settings.aggregationMode },
                     set: { settings.aggregationMode = $0; settings.save() }
+                ),
+                appearance: Binding(
+                    get: { settings.appearance },
+                    set: {
+                        settings.appearance = $0
+                        settings.save()
+                        settings.applyAppearance()
+                    }
+                ),
+                language: Binding(
+                    get: { settings.language },
+                    set: { settings.language = $0; settings.save() }
                 ),
                 refreshInterval: Binding(
                     get: { settings.refreshInterval },
@@ -21,13 +34,18 @@ struct SettingsView: View {
                 )
             )
             .tabItem {
-                Label("General", systemImage: "gear")
+                Label(settings.l10n.tabGeneral, systemImage: "gear")
             }
 
             AggregationSettingsTab(
+                l10n: settings.l10n,
                 aggregationIcon: Binding(
                     get: { settings.aggregationIcon },
                     set: { settings.aggregationIcon = $0; settings.save() }
+                ),
+                iconSpacing: Binding(
+                    get: { settings.iconSpacing },
+                    set: { settings.iconSpacing = $0; settings.save() }
                 ),
                 autoHideDelay: Binding(
                     get: { settings.autoHideDelay },
@@ -35,12 +53,12 @@ struct SettingsView: View {
                 )
             )
             .tabItem {
-                Label("Aggregation", systemImage: "rectangle.stack")
+                Label(settings.l10n.tabAggregation, systemImage: "rectangle.stack")
             }
 
             IconManagementTab()
                 .tabItem {
-                    Label("Icons", systemImage: "list.bullet")
+                    Label(settings.l10n.tabIcons, systemImage: "list.bullet")
                 }
 
             IconOrderTab(
@@ -50,7 +68,7 @@ struct SettingsView: View {
                 )
             )
             .tabItem {
-                Label("Order", systemImage: "arrow.up.arrow.down")
+                Label(settings.l10n.tabOrder, systemImage: "arrow.up.arrow.down")
             }
         }
         .formStyle(.grouped)
@@ -58,16 +76,19 @@ struct SettingsView: View {
 }
 
 struct GeneralSettingsTab: View {
+    let l10n: L10nTable
     @Binding var aggregationMode: SettingsStore.AggregationMode
+    @Binding var appearance: AppearanceMode
+    @Binding var language: AppLanguage
     @Binding var refreshInterval: TimeInterval
 
     var body: some View {
         Form {
-            Section("Mode") {
-                Picker("Operating Mode", selection: $aggregationMode) {
-                    ForEach(SettingsStore.AggregationMode.allCases, id: \.self) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
+            Section(l10n.sectionMode) {
+                Picker(l10n.operatingMode, selection: $aggregationMode) {
+                    Text(l10n.modeAggregation).tag(SettingsStore.AggregationMode.aggregation)
+                    Text(l10n.modeNormal).tag(SettingsStore.AggregationMode.normal)
+                    Text(l10n.modeDisabled).tag(SettingsStore.AggregationMode.disabled)
                 }
                 .pickerStyle(.segmented)
 
@@ -76,9 +97,29 @@ struct GeneralSettingsTab: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Refresh") {
+            Section(l10n.sectionAppearance) {
+                Picker("", selection: $appearance) {
+                    Text(l10n.appearanceSystem).tag(AppearanceMode.system)
+                    Text(l10n.appearanceLight).tag(AppearanceMode.light)
+                    Text(l10n.appearanceDark).tag(AppearanceMode.dark)
+                }
+                .pickerStyle(.segmented)
+            }
+
+            Section(l10n.sectionLanguage) {
+                Picker("", selection: $language) {
+                    Text(l10n.languageSystem).tag(AppLanguage.system)
+                    Text(AppLanguage.en.nativeName).tag(AppLanguage.en)
+                    Text(AppLanguage.zhHans.nativeName).tag(AppLanguage.zhHans)
+                    Text(AppLanguage.ja.nativeName).tag(AppLanguage.ja)
+                    Text(AppLanguage.de.nativeName).tag(AppLanguage.de)
+                    Text(AppLanguage.es.nativeName).tag(AppLanguage.es)
+                }
+            }
+
+            Section(l10n.sectionRefresh) {
                 HStack {
-                    Text("Menu bar scan interval")
+                    Text(l10n.scanInterval)
                     Spacer()
                     Picker("", selection: $refreshInterval) {
                         Text("1s").tag(1.0)
@@ -94,42 +135,50 @@ struct GeneralSettingsTab: View {
 
     private var modeDescription: String {
         switch aggregationMode {
-        case .aggregation:
-            return "Hide menu bar icons and display them in a floating aggregation panel below the menu bar."
-        case .normal:
-            return "Fold menu bar icons into a single expandable menu item."
-        case .disabled:
-            return "StatusBar Pro will not manage menu bar icons."
+        case .aggregation: return l10n.modeDescAggregation
+        case .normal: return l10n.modeDescNormal
+        case .disabled: return l10n.modeDescDisabled
         }
     }
 }
 
 struct AggregationSettingsTab: View {
+    let l10n: L10nTable
     @Binding var aggregationIcon: SettingsStore.AggregationIconType
+    @Binding var iconSpacing: SettingsStore.IconSpacing
     @Binding var autoHideDelay: TimeInterval?
 
     var body: some View {
         Form {
-            Section("Aggregation Icon") {
-                AggregationIconSelector(selectedIcon: $aggregationIcon)
+            Section(l10n.sectionAggIcon) {
+                AggregationIconSelector(selectedIcon: $aggregationIcon, l10n: l10n)
             }
 
-            Section("Auto Hide") {
+            Section(l10n.sectionSpacing) {
+                Picker(l10n.sectionSpacing, selection: $iconSpacing) {
+                    Text(l10n.spacingDefault).tag(SettingsStore.IconSpacing.default)
+                    Text(l10n.spacingCompact).tag(SettingsStore.IconSpacing.compact)
+                    Text(l10n.spacingSmall).tag(SettingsStore.IconSpacing.small)
+                    Text(l10n.spacingNone).tag(SettingsStore.IconSpacing.none)
+                }
+            }
+
+            Section(l10n.sectionAutoHide) {
                 HStack {
-                    Text("Delay before hiding")
+                    Text(l10n.delayBeforeHiding)
                     Spacer()
                     Picker("", selection: $autoHideDelay) {
                         Text("2s").tag(TimeInterval?(2.0))
                         Text("5s").tag(TimeInterval?(5.0))
                         Text("10s").tag(TimeInterval?(10.0))
                         Text("30s").tag(TimeInterval?(30.0))
-                        Text("Never").tag(TimeInterval?(nil) as TimeInterval?)
+                        Text(l10n.never).tag(TimeInterval?(nil) as TimeInterval?)
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 280)
                 }
 
-                Text("How long to keep a temporarily shown icon before hiding it again.")
+                Text(l10n.autoHideCaption)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -143,8 +192,8 @@ struct IconManagementTab: View {
 
     var body: some View {
         Form {
-            Section("Menu Bar Icons") {
-                Text("Detected apps and their type.")
+            Section(settings.l10n.iconManagementTitle) {
+                Text(settings.l10n.iconManagementCaption)
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -170,7 +219,7 @@ struct IconManagementTab: View {
 
                         Spacer()
 
-                        Text(item.appType == .statusbarOnly ? "Status Bar" : "Dock")
+                        Text(item.appType == .statusbarOnly ? settings.l10n.statusBar : settings.l10n.dock)
                             .font(.caption)
                             .foregroundStyle(item.appType == .statusbarOnly ? .purple : .green)
                     }
@@ -185,13 +234,20 @@ struct IconManagementTab: View {
 struct IconOrderTab: View {
     @Binding var customOrder: [String]
     @Environment(MenuBarMonitor.self) private var menuBarMonitor
+    @Environment(SettingsStore.self) private var settings
 
     var body: some View {
         Form {
             IconOrderView(
                 customOrder: $customOrder,
-                menuBarItems: menuBarMonitor.menuBarItems
+                menuBarItems: menuBarMonitor.menuBarItems,
+                l10n: settings.l10n
             )
+        }
+        .onChange(of: menuBarMonitor.menuBarItems) { _, newItems in
+            // Newly detected apps slot in after user-ordered icons instead of
+            // being silently ignored by the ordering UI.
+            settings.syncOrder(with: newItems.map(\.id))
         }
     }
 }

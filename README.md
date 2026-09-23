@@ -10,16 +10,21 @@ macOS 菜单栏管理工具，自动检测并管理状态栏和 Dock 应用。
 - **实时监控**：定时刷新运行中的应用列表
 - **搜索过滤**：按名称或 Bundle ID 搜索应用
 
+### 个性化
+- **外观主题**：跟随系统 / 浅色 / 深色，全局即时生效（含菜单栏面板与弹窗）
+- **多语言界面**：简体中文 / English / 日本語 / Deutsch / Español，可在设置中切换或跟随系统语言
+
 ### 界面设计
 - **主窗口**：HSplitView 布局，左侧 sidebar + 右侧详情
 - **Stat Cards**：Total / Status Bar / Dock 统计卡片，点击联动过滤
 - **Popover**：状态栏聚合面板，搜索 + 应用列表
 - **操作按钮**：Open (🔵) / Quit (🔴) / Force Quit (🟠)
+- **排序页**：拖拽调整自定义顺序；「未排序」区的图标可拖入顺序列表（拖到某行即插入到该行之前），顺序内的图标可用删除手势移出
 
 ### App 类型
 | 类型 | 说明 | 激活方式 |
 |------|------|----------|
-| Status Bar | 仅有状态栏图标，无 Dock 图标 | `launchApplication` |
+| Status Bar | 仅有状态栏图标，无 Dock 图标 | `openApplication(at:configuration:)`（`activates = true`） |
 | Dock | 有 Dock 图标 | `activate` |
 
 ## 技术栈
@@ -36,52 +41,77 @@ macOS 菜单栏管理工具，自动检测并管理状态栏和 Dock 应用。
 StatusBar Pro/
 ├── Sources/StatusBar Pro/
 │   ├── App/
-│   │   ├── StatusBar ProApp.swift      # App 入口
-│   │   └── StatusBarManager.swift  # 状态栏管理
+│   │   ├── MacStatusApp.swift      # App 入口（@main + AppDelegate）
+│   │   ├── SettingsOpener.swift    # 打开设置窗口
+│   │   └── StatusBarManager.swift  # 状态栏图标 / Popover / 聚合面板调度
 │   ├── Managers/
 │   │   ├── MenuBarMonitor.swift    # 核心监控逻辑
 │   │   ├── SettingsStore.swift     # 设置存储
-│   │   ├── AccessibilityManager.swift  # 权限管理
-│   │   └── AggregationPanel.swift  # 聚合面板
-│   └── Views/
-│       ├── ContentView.swift       # 主窗口
-│       ├── PopoverView.swift       # 状态栏面板
-│       ├── SettingsView.swift      # 设置界面
-│       ├── AggregationView.swift   # 聚合视图
-│       └── IconOrderView.swift     # 图标排序
+│   │   ├── Localization.swift      # L10nTable + 5 种语言表
+│   │   ├── AccessibilityManager.swift  # 辅助功能状态（只读展示）
+│   │   └── AggregationPanel.swift  # 聚合面板窗口
+│   ├── Views/
+│   │   ├── ContentView.swift       # 主窗口
+│   │   ├── PopoverView.swift       # 状态栏面板
+│   │   ├── SettingsView.swift      # 设置界面
+│   │   ├── AggregationView.swift   # 聚合视图
+│   │   ├── AggregationIconSelector.swift  # 聚合图标选择
+│   │   └── IconOrderView.swift     # 图标排序
+│   └── Resources/                  # entitlements / Assets.xcassets
+├── Tests/StatusBarProTests/        # 单元测试（swift test，纯逻辑）
 ├── Package.swift
 ├── script/
-│   └── build_and_run.sh
+│   ├── build_and_run.sh            # 本地开发：构建 + 签名 + 运行
+│   └── release.sh                  # 发布：构建 + 签名 + 打包（mas / devid）
+├── design/leaf-icon/               # App 图标设计稿（SVG + 渲染脚本）
 └── docs/                  # GitHub Pages（中英双语）
     ├── assets/            # site.css + i18n.js
     ├── index.html
     ├── privacy/
-    └── support/
+    ├── support/
+    └── AppStoreChecklist.md
 ```
 
 ## 本地运行
 
 ```bash
-# 构建并运行
+# 构建并运行（debug）
 ./script/build_and_run.sh
 
 # 仅构建
 swift build
 
-# 运行已构建的 app
+# 其他模式：--debug（lldb）/ --logs（日志流）/ --verify（启动自检）
 ./script/build_and_run.sh run
 ```
+
+`script/build_and_run.sh` 产出的 `dist/StatusBar Pro.app` 使用官网自分发的 Bundle ID（`com.jiangcheng.EasyBar`）与 Developer ID entitlements（沙盒关闭），与 CI 的 devid 渠道保持一致；沙盒开启的 MAS 渠道由 `script/release.sh` 的 `mas` 分支负责。
 
 ## 系统要求
 
 - macOS 14.0+
-- Accessibility 权限（用于检测应用状态）
+- 不请求任何权限：应用只调用 `AXIsProcessTrusted()` 读取辅助功能开关状态，用于界面上的只读展示（未开启不影响任何功能）
+
+### 构建环境要求
+
+- Swift 6.0+，macOS 14+ SDK
+- **需要完整 Xcode**：`xcode-select -p` 必须指向 `Xcode.app`，且已同意许可（`sudo xcodebuild -license accept`）。SwiftUI 的宏插件（`@State`、`@Bindable` 等）随 Xcode 提供，只装 Command Line Tools 会报
+  `plugin for module 'SwiftUIMacros' not found`；而 Swift 6.4 起 `swift build` 默认改用 `swiftbuild` 构建系统，在 CLT-only 环境下会直接以 `Unknown error parsing property list` 失败。
+- 临时绕过（未能切换 Xcode 时，可显式指定插件路径）：
+  ```bash
+  swift build --build-system native \
+    -Xswiftc -plugin-path \
+    -Xswiftc /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/swift/host/plugins
+  ```
+- 单元测试（`swift test`）需要完整 Xcode 提供 `XCTest` 模块与 `xctest` runner，仅装 Command Line Tools 无法本地运行；CI（`test.yml`）在 `xcode-select` 指向 Xcode 后执行。
 
 ## 已知限制
 
-- Status Bar 应用无法通过 `NSRunningApplication.activate()` 激活（macOS 安全限制）
+- Status Bar 应用无法通过 `NSRunningApplication.activate()` 激活（macOS 安全限制），本应用对 accessory 应用通过 `NSWorkspace.openApplication`（`activates = true`）重新唤起
 - 部分 accessory app（如 Macs Fan Control）无法被其他 app 激活
-- App 类型检测基于 `activationPolicy`，无法自动检测状态栏图标
+- App 类型检测基于 `activationPolicy`，无法读取真实的状态栏图标归属
+- 聚合面板不会隐藏系统菜单栏图标（v1.6.0 起移除 AX 隐藏方案），仅在菜单栏下方浮动显示
+- Status Bar 应用唤起已从弃用的 `launchApplication(withBundleIdentifier:)` 迁移至 `NSWorkspace.openApplication(at:configuration:)`；激活时序与旧 API 存在差异，若个别 accessory 应用唤起异常请反馈
 
 ## 版本历史
 
@@ -94,12 +124,15 @@ swift build
 | v1.5.0 | AX API 兼容性 + debug 工具 |
 | v1.6.0 | 移除 AX 隐藏，纯 UI 聚合方案 |
 | v1.7.0 | Quit/force-quit + App 状态检测 |
+| v1.14.0 | Code Review 修复：聚合面板点击激活、Popover 双 toggle 竞态、hover 暂停自动隐藏、Force Quit 二次确认、`Bundle.main` 自排除、`openApplication` 迁移、Layout 常量收敛、单元测试 + CI |
 | v1.8.0 | UI 重新设计 + Sidebar 修复 |
 | v1.9.0 | HSplitView 布局 + stat card 联动 |
 | v1.10.0 | accessory app 检测 + eye icon 手势修复 |
 | v1.11.0 | 移除 hasStatusBar 自动检测 |
 | v1.12.0 | App 类型检测 + 移除 hide 功能 |
 | v1.13.0 | **里程碑：Status Bar app 跳转修复** |
+| v1.14.0 | 代码 review 修复（P0×3/P1×7/P2×3 + 回归 9 项）；外观主题；多语言（中/日/英/德/西） |
+| 待发布 (v1.15.0) | 移除无用途的辅助功能权限请求（改为只读状态展示，去掉常驻定时轮询）；修复 AppIcon `Contents.json` 非法 size；排序页支持从「未排序」拖入；构建脚本与文档一致性修复 |
 
 ## CI/CD 发布（双轨）
 
@@ -110,9 +143,15 @@ swift build
 | Mac App Store | `release.yml` | `com.jiangcheng.MacStatusApp` | 开（MAS 强制） | 编译期移除 | `.pkg` → altool 上传 |
 | 官网自分发 | `notarize.yml` | `com.jiangcheng.EasyBar` | 关（Hardened Runtime） | 完整可用 | `.dmg` → 公证 + 装订 |
 
+单元测试由独立的 `test.yml` 在 push/PR 时运行（macOS runner + 完整 Xcode，`swift test`）。
+
+> **维护提示**：`release.yml` 中的 `xcrun altool --upload-app` 已被 Apple 列入弃用计划（公证类功能已由 `notarytool` 取代）。若新版 Xcode runner 镜像移除 altool,把该步骤切换为 Transporter 或 App Store Connect API。
+
 两版 Bundle ID 不同，可共存于同一台机器。MAS 的 ID 已在 App Store 注册，不可更改；官网版独立使用 `com.jiangcheng.EasyBar`。Developer ID 签名无需 provisioning profile 或预先注册 App ID，有 Developer ID Application 证书即可。
 
 两版设置不互通（`UserDefaults.standard` 随 Bundle ID 隔离）。
+
+两条流水线都不依赖 Xcode 工程：`script/release.sh` 直接编译 SPM 产物再组装 `.app`（仓库内已不再保留 `.xcodeproj`），MAS 版再用 `productbuild` 打成 `.pkg` 上传。
 
 沙盒下 `NSRunningApplication.terminate()` 被 macOS 拦截，且用户在「隐私与安全性」无对应开关可授权，故 MAS 版用 `-D MAC_APP_STORE` 编译期剔除该功能。
 

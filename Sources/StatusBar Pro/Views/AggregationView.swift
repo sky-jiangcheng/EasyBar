@@ -5,33 +5,46 @@ struct AggregationView: View {
     @Environment(SettingsStore.self) private var settings
 
     var body: some View {
-        VStack(spacing: 0) {
-            if menuBarMonitor.menuBarItems.isEmpty {
+        Group {
+            if statusbarItems.isEmpty {
                 emptyState
             } else {
-                iconGrid
+                grid
             }
         }
-        .frame(width: 360, height: 80)
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // Aggregation semantics: only Status Bar (accessory) apps belong in the panel.
+    private var statusbarItems: [MenuBarMonitor.MenuBarItem] {
+        menuBarMonitor.sortedByCustomOrder(
+            menuBarMonitor.menuBarItems.filter { $0.appType == .statusbarOnly }
+        )
     }
 
     private var emptyState: some View {
         HStack {
             aggregationIconView
                 .frame(width: 20, height: 20)
-            Text("No apps running")
+            Text(settings.l10n.noStatusApps)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var iconGrid: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: settings.iconSpacing.value) {
-                ForEach(menuBarMonitor.menuBarItems) { item in
+    private var grid: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVGrid(
+                columns: Array(
+                    repeating: GridItem(.fixed(AggregationPanel.Layout.iconSize), spacing: settings.iconSpacing.value),
+                    count: AggregationPanel.Layout.columnsPerRow
+                ),
+                spacing: settings.iconSpacing.value
+            ) {
+                ForEach(statusbarItems) { item in
                     AggregationIcon(item: item)
                 }
             }
@@ -63,6 +76,8 @@ struct AggregationView: View {
 }
 
 private struct AggregationIcon: View {
+    @Environment(MenuBarMonitor.self) private var menuBarMonitor
+
     let item: MenuBarMonitor.MenuBarItem
 
     @State private var isHovering = false
@@ -84,7 +99,7 @@ private struct AggregationIcon: View {
                 .font(.system(size: 9))
                 .lineLimit(1)
         }
-        .frame(width: 56, height: 56)
+        .frame(width: AggregationPanel.Layout.iconSize, height: AggregationPanel.Layout.iconSize)
         .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
         .overlay {
             if isHovering {
@@ -94,6 +109,11 @@ private struct AggregationIcon: View {
         }
         .onHover { hovering in
             isHovering = hovering
+        }
+        // Clicking an aggregated icon activates its app. The panel is a
+        // non-activating NSPanel, so focus stays with whatever the user was on.
+        .onTapGesture {
+            menuBarMonitor.activateApp(item)
         }
         .help(item.processName)
     }

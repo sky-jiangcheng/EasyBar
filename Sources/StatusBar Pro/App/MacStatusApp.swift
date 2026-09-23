@@ -38,6 +38,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     )
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        settingsStore.applyAppearance()
+
         statusBarController = StatusBarManager(
             menuBarMonitor: menuBarMonitor,
             settingsStore: settingsStore,
@@ -45,5 +47,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         )
 
         menuBarMonitor.startMonitoring()
+    }
+
+    /// Permissions can change while the app is in the background (System
+    /// Settings), so the read-only AX flag is re-read on every activation
+    /// instead of being polled on a timer.
+    func applicationDidBecomeActive(_ notification: Notification) {
+        accessibilityManager.refresh()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // Release menu bar resources in a deterministic order before teardown.
+        menuBarMonitor.stopMonitoring()
+        statusBarController?.teardown()
+        statusBarController = nil
+
+        // Drop custom-order entries of apps that are no longer running, so the
+        // persisted order does not grow without bound across sessions.
+        settingsStore.pruneOrder(keeping: menuBarMonitor.menuBarItems.map(\.id))
     }
 }

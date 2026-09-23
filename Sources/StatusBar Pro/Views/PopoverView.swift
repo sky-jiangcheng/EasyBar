@@ -9,11 +9,14 @@ struct PopoverView: View {
 
     let onDismiss: () -> Void
 
+    private var l10n: L10nTable { settings.l10n }
+
     private var filteredItems: [MenuBarMonitor.MenuBarItem] {
+        let base = menuBarMonitor.sortedByCustomOrder(menuBarMonitor.menuBarItems)
         guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return menuBarMonitor.menuBarItems
+            return base
         }
-        return menuBarMonitor.menuBarItems.filter { item in
+        return base.filter { item in
             item.processName.localizedCaseInsensitiveContains(searchText)
                 || item.bundleIdentifier.localizedCaseInsensitiveContains(searchText)
         }
@@ -35,7 +38,7 @@ struct PopoverView: View {
 
             footerSection
         }
-        .frame(width: 360, height: 480)
+        .frame(minWidth: 360, idealWidth: 360, minHeight: 420, idealHeight: 480)
     }
 
     private var headerSection: some View {
@@ -43,7 +46,7 @@ struct PopoverView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("StatusBar Pro")
                     .font(.headline)
-                Text("\(menuBarMonitor.menuBarItems.count) apps")
+                Text(String(format: l10n.appsCount, menuBarMonitor.menuBarItems.count))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -53,7 +56,7 @@ struct PopoverView: View {
             HStack(spacing: 6) {
                 Image(systemName: "lock.shield")
                     .foregroundStyle(settings.aggregationMode == .aggregation ? .orange : .secondary)
-                Text(settings.aggregationMode == .aggregation ? "Aggregation" : "Normal")
+                Text(modeBadgeText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -65,11 +68,21 @@ struct PopoverView: View {
         .padding(.vertical, 12)
     }
 
+    /// All three aggregation modes render their own badge label; a two-way
+    /// ternary previously showed "Normal" in Disabled mode.
+    private var modeBadgeText: String {
+        switch settings.aggregationMode {
+        case .aggregation: return l10n.modeAggregation
+        case .normal: return l10n.modeNormal
+        case .disabled: return l10n.modeDisabled
+        }
+    }
+
     private var searchSection: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-            TextField("Search...", text: $searchText)
+            TextField(l10n.searchPlaceholder, text: $searchText)
                 .textFieldStyle(.plain)
 
             if !searchText.isEmpty {
@@ -93,16 +106,16 @@ struct PopoverView: View {
         VStack(spacing: 0) {
             if filteredItems.isEmpty {
                 ContentUnavailableView(
-                    "No Apps",
+                    l10n.noApps,
                     systemImage: "app.badge",
-                    description: Text("No apps found.")
+                    description: Text(l10n.noAppsFound)
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(filteredItems) { item in
-                            IconRow(item: item)
+                            IconRow(item: item, l10n: l10n)
                         }
                     }
                 }
@@ -118,18 +131,21 @@ struct PopoverView: View {
 
             Spacer()
 
-            Button("Settings...") {
-                if #available(macOS 14.0, *) {
-                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                } else {
-                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: NSApp, from: nil)
-                }
+            Button(l10n.panel) {
+                NotificationCenter.default.post(name: .toggleAggregationPanel, object: nil)
             }
             .buttonStyle(.plain)
             .font(.caption)
             .foregroundStyle(.secondary)
 
-            Button("Quit") {
+            Button(l10n.settingsDots) {
+                AppSettingsOpener.open()
+            }
+            .buttonStyle(.plain)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+
+            Button(l10n.quit) {
                 NSApp.terminate(nil)
             }
             .buttonStyle(.plain)
@@ -145,6 +161,7 @@ private struct IconRow: View {
     @Environment(MenuBarMonitor.self) private var menuBarMonitor
 
     let item: MenuBarMonitor.MenuBarItem
+    let l10n: L10nTable
 
     var body: some View {
         HStack(spacing: 10) {
@@ -166,7 +183,7 @@ private struct IconRow: View {
                     .font(.system(.body, weight: .medium))
                     .lineLimit(1)
                     .foregroundStyle(.primary)
-                Text(item.appType == .statusbarOnly ? "Status Bar" : "Dock")
+                Text(item.appType == .statusbarOnly ? l10n.statusBar : l10n.dock)
                     .font(.caption2)
                     .foregroundStyle(item.appType == .statusbarOnly ? .purple : .green)
             }
@@ -182,7 +199,7 @@ private struct IconRow: View {
                         .foregroundStyle(.blue)
                 }
                 .buttonStyle(.plain)
-                .help("Open")
+                .help(l10n.open)
 
 #if !MAC_APP_STORE
                 Button {
@@ -193,7 +210,7 @@ private struct IconRow: View {
                         .foregroundStyle(.red)
                 }
                 .buttonStyle(.plain)
-                .help("Quit")
+                .help(l10n.quit)
 
                 Button {
                     menuBarMonitor.forceQuitApp(item)
@@ -203,7 +220,7 @@ private struct IconRow: View {
                         .foregroundStyle(.orange)
                 }
                 .buttonStyle(.plain)
-                .help("Force Quit")
+                .help(l10n.forceQuit)
 #endif
             }
         }

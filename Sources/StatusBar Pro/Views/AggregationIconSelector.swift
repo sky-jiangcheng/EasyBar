@@ -2,13 +2,14 @@ import SwiftUI
 
 struct AggregationIconSelector: View {
     @Binding var selectedIcon: SettingsStore.AggregationIconType
+    let l10n: L10nTable
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Aggregation Icon")
+            Text(l10n.sectionAggIcon)
                 .font(.headline)
 
-            Text("Choose the icon displayed in the menu bar when aggregation mode is active.")
+            Text(l10n.aggIconCaption)
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -16,6 +17,7 @@ struct AggregationIconSelector: View {
                 ForEach(SettingsStore.AggregationIconType.allCases) { iconType in
                     IconOptionButton(
                         iconType: iconType,
+                        title: title(for: iconType),
                         isSelected: selectedIcon == iconType,
                         action: { selectedIcon = iconType }
                     )
@@ -23,10 +25,22 @@ struct AggregationIconSelector: View {
             }
         }
     }
+
+    private func title(for iconType: SettingsStore.AggregationIconType) -> String {
+        switch iconType {
+        case .dots: return l10n.iconTypeDots
+        case .grid: return l10n.iconTypeGrid
+        case .chevron: return l10n.iconTypeChevron
+        case .square: return l10n.iconTypeSquare
+        case .circle: return l10n.iconTypeCircle
+        case .transparent: return l10n.iconTypeTransparent
+        }
+    }
 }
 
 private struct IconOptionButton: View {
     let iconType: SettingsStore.AggregationIconType
+    let title: String
     let isSelected: Bool
     let action: () -> Void
 
@@ -44,7 +58,7 @@ private struct IconOptionButton: View {
                         }
                     }
 
-                Text(iconType.rawValue)
+                Text(title)
                     .font(.caption)
                     .foregroundStyle(isSelected ? .primary : .secondary)
             }

@@ -1,7 +1,15 @@
+"""Legacy placeholder-icon generator, kept for reference only.
+
+The shipping icons come from the leaf design pipeline under `design/leaf-icon`
+(`generate_leaf_svg.py` renders the SVGs, `render_icons.swift` produces every PNG
+size). This script still draws the old "MS" placeholder, so it is only a fallback
+if that pipeline is unavailable. Run it from the repository root so the relative
+output path resolves.
+"""
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
-OUT = Path("Sources/MacStatusApp/Resources/Assets.xcassets/AppIcon.appiconset")
+OUT = Path("Sources/StatusBar Pro/Resources/Assets.xcassets/AppIcon.appiconset")
 SIZES = {
     "icon_16x16.png": 16,
     "icon_16x16@2x.png": 32,

@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Builds a locally signed .app for day-to-day development. Sandbox is OFF (same
+# as the Developer ID channel in release.sh), so this uses the direct-distribution
+# bundle ID together with the Developer ID entitlements.
+
 MODE="${1:-run}"
 APP_NAME="StatusBar Pro"
-BUNDLE_ID="com.jiangcheng.MacStatusApp"
+BUNDLE_ID="com.jiangcheng.EasyBar"
 MIN_SYSTEM_VERSION="14.0"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -14,15 +18,34 @@ APP_MACOS="$APP_CONTENTS/MacOS"
 APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
-ENTITLEMENTS="$ROOT_DIR/Sources/StatusBar Pro/Resources/EasyBar.entitlements"
+ENTITLEMENTS="$ROOT_DIR/Sources/StatusBar Pro/Resources/DeveloperID.entitlements"
 
-export SWIFTPM_HOME="$ROOT_DIR/.build/swiftpm-home"
+# SwiftPM has no SWIFTPM_HOME variable (it is silently ignored), so its cache,
+# config and security directories are isolated explicitly instead of touching
+# ~/.swiftpm.
+SPM_ISOLATION=(
+  --cache-path "$ROOT_DIR/.build/spm/cache"
+  --config-path "$ROOT_DIR/.build/spm/config"
+  --security-path "$ROOT_DIR/.build/spm/security"
+)
 export CLANG_MODULE_CACHE_PATH="$ROOT_DIR/.build/clang-module-cache"
+
+# SwiftUI's macro plugins (@State, @Bindable, ...) ship with Xcode. With a
+# CommandLineTools-only selection swiftc fails with
+# "plugin for module 'SwiftUIMacros' not found", so warn early with the fix.
+case "$(xcode-select -p 2>/dev/null)" in
+  *CommandLineTools*)
+    echo "warning: active developer directory is '$(xcode-select -p)'." >&2
+    echo "         A full Xcode selection is required to compile SwiftUI code:" >&2
+    echo "           sudo xcodebuild -license accept" >&2
+    echo "           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer" >&2
+    ;;
+esac
 
 pkill -x "$APP_NAME" >/dev/null 2>&1 || true
 
-swift build --disable-sandbox --scratch-path "$ROOT_DIR/.build"
-BUILD_BINARY="$(swift build --disable-sandbox --scratch-path "$ROOT_DIR/.build" --show-bin-path)/$APP_NAME"
+swift build --disable-sandbox "${SPM_ISOLATION[@]}" --scratch-path "$ROOT_DIR/.build"
+BUILD_BINARY="$(swift build --disable-sandbox "${SPM_ISOLATION[@]}" --scratch-path "$ROOT_DIR/.build" --show-bin-path)/$APP_NAME"
 
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_MACOS" "$APP_RESOURCES"

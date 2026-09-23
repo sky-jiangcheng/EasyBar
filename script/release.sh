@@ -50,9 +50,25 @@ esac
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
 
-# Isolate SPM caches under the project to avoid touching ~/.swiftpm (sandbox-friendly).
-export SWIFTPM_HOME="$ROOT_DIR/.build/swiftpm-home"
+# SwiftPM has no SWIFTPM_HOME variable (it is silently ignored), so its cache,
+# config and security directories are isolated explicitly under .build/.
+SPM_ISOLATION=(
+  --cache-path "$ROOT_DIR/.build/spm/cache"
+  --config-path "$ROOT_DIR/.build/spm/config"
+  --security-path "$ROOT_DIR/.build/spm/security"
+)
 export CLANG_MODULE_CACHE_PATH="$ROOT_DIR/.build/clang-module-cache"
+
+# SwiftUI's macro plugins (@State, @Bindable, ...) ship with Xcode; with a
+# CommandLineTools-only selection swiftc fails with
+# "plugin for module 'SwiftUIMacros' not found".
+case "$(xcode-select -p 2>/dev/null)" in
+  *CommandLineTools*)
+    echo "warning: active developer directory is '$(xcode-select -p)'." >&2
+    echo "         Run 'sudo xcodebuild -license accept' and" >&2
+    echo "         'sudo xcode-select -s /Applications/Xcode.app/Contents/Developer' first." >&2
+    ;;
+esac
 APP_BUNDLE="$DIST_DIR/$PRODUCT.app"
 APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
@@ -68,8 +84,8 @@ for a in $ARCHS; do ARCH_FLAGS+=(--arch "$a"); done
 DEFINES=(${SWIFT_DEFINES[@]+"${SWIFT_DEFINES[@]}"})
 
 echo "==> Building release binary (channel: $CHANNEL, archs: $ARCHS)"
-swift build --disable-sandbox -c release "${ARCH_FLAGS[@]}" "${DEFINES[@]}" --scratch-path "$ROOT_DIR/.build"
-BIN_DIR="$(swift build --disable-sandbox -c release "${ARCH_FLAGS[@]}" "${DEFINES[@]}" --scratch-path "$ROOT_DIR/.build" --show-bin-path)"
+swift build --disable-sandbox "${SPM_ISOLATION[@]}" -c release "${ARCH_FLAGS[@]}" "${DEFINES[@]}" --scratch-path "$ROOT_DIR/.build"
+BIN_DIR="$(swift build --disable-sandbox "${SPM_ISOLATION[@]}" -c release "${ARCH_FLAGS[@]}" "${DEFINES[@]}" --scratch-path "$ROOT_DIR/.build" --show-bin-path)"
 BINARY="$BIN_DIR/$PRODUCT"
 [ -f "$BINARY" ] || { echo "binary not found: $BINARY" >&2; exit 1; }
 

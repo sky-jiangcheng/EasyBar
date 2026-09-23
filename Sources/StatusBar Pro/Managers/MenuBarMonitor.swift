@@ -80,16 +80,50 @@ final class MenuBarMonitor {
     }
 
     func refreshMenuItems() {
-        menuBarItems = getMenuItemsFromRunningApps()
+        let newItems = getMenuItemsFromRunningApps()
+        let oldItems = menuBarItems
+        guard oldItems != newItems else { return }
+        menuBarItems = newItems
+
+        // Auto-show signal: fire only when a NEW Status Bar app appears (the set
+        // grew). Disappearances — including the last one quitting — must not pop
+        // an empty or shrinking panel at the user.
+        let oldStatusApps = Set(oldItems.filter { $0.appType == .statusbarOnly }.map(\.id))
+        let newStatusApps = Set(newItems.filter { $0.appType == .statusbarOnly }.map(\.id))
+        if !newStatusApps.isEmpty && !oldStatusApps.isSuperset(of: newStatusApps) {
+            NotificationCenter.default.post(name: .aggregationShouldShow, object: nil)
+        }
+        // Lets visible panels re-fit their frame when the app list changes.
+        NotificationCenter.default.post(name: .menuBarItemsChanged, object: nil)
+    }
+
+    /// Orders items by the user's custom order first; unordered items follow
+    /// alphabetically. Used by the aggregation panel and the popover.
+    func sortedByCustomOrder(_ items: [MenuBarItem]) -> [MenuBarItem] {
+        guard !settingsStore.customOrder.isEmpty else { return items }
+        let rank = Dictionary(
+            settingsStore.customOrder.enumerated().map { ($1, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        return items.sorted { lhs, rhs in
+            switch (rank[lhs.id], rank[rhs.id]) {
+            case let (left?, right?): return left < right
+            case (.some, .none): return true
+            case (.none, .some): return false
+            default:
+                return lhs.processName.localizedCaseInsensitiveCompare(rhs.processName) == .orderedAscending
+            }
+        }
     }
 
     private func getMenuItemsFromRunningApps() -> [MenuBarItem] {
         var items: [MenuBarItem] = []
         let runningApps = NSWorkspace.shared.runningApplications
 
+        // The app itself is excluded dynamically via Bundle.main above (the
+        // bundle ID differs per distribution channel), so only system agents
+        // are listed here.
         let skipBundleIDs: Set<String> = [
-            "com.jiangcheng.MacStatusApp",
-            "com.jiangcheng.EasyBar",
             "com.apple.Spotlight",
             "com.apple.WindowManager",
             "com.apple.notificationcenterui",
@@ -131,6 +165,7 @@ final class MenuBarMonitor {
                 continue
             }
 
+            if bundleID == Bundle.main.bundleIdentifier { continue }
             if skipBundleIDs.contains(bundleID) { continue }
 
             if app.activationPolicy == .regular {
@@ -146,10 +181,17 @@ final class MenuBarMonitor {
                 guard !bundleID.hasPrefix("com.apple.WebKit.") else { continue }
                 guard !bundleID.hasPrefix("com.apple.") else { continue }
 
-                let dominatedByParent = runningApps.contains { other in
-                    other.bundleIdentifier != bundleID
-                        && other.activationPolicy == .regular
-                        && bundleID.hasPrefix((other.bundleIdentifier ?? "").components(separatedBy: ".").prefix(2).joined(separator: "."))
+                // Heuristic: treat an accessory process as a helper of a regular app
+                // when both share the same first two bundle-ID segments (com.docker.*
+                // under com.docker). Segment-aligned equality (not prefix matching)
+                // prevents false positives such as com.docker absorbing com.dockerized.app.
+                let ownBase = Self.baseBundleID(of: bundleID)
+                let dominatedByParent = ownBase != nil && runningApps.contains { other in
+                    guard other.bundleIdentifier != bundleID,
+                          other.activationPolicy == .regular,
+                          let otherBase = Self.baseBundleID(of: other.bundleIdentifier ?? "")
+                    else { return false }
+                    return otherBase == ownBase
                 }
                 guard !dominatedByParent else { continue }
 
@@ -167,6 +209,15 @@ final class MenuBarMonitor {
         return items.sorted { $0.processName.localizedCaseInsensitiveCompare($1.processName) == .orderedAscending }
     }
 
+    /// First two segments of a bundle identifier ("com.docker" from
+    /// "com.docker.helper"); nil when the identifier has fewer than two segments.
+    /// `nonisolated` (pure string logic) and internal for unit tests.
+    static func baseBundleID(of identifier: String) -> String? {
+        let parts = identifier.split(separator: ".").map(String.init)
+        guard parts.count >= 2 else { return nil }
+        return parts.prefix(2).joined(separator: ".")
+    }
+
 #if !MAC_APP_STORE
     func quitApp(_ item: MenuBarItem) {
         guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }
@@ -175,22 +226,36 @@ final class MenuBarMonitor {
 
     func forceQuitApp(_ item: MenuBarItem) {
         guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }
+        // SIGKILL is irreversible; guard the small inline button against
+        // mis-clicks with a confirmation dialog.
+        let l10n = L10n.table(for: settingsStore.language)
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = String(format: l10n.forceQuitConfirmTitle, item.processName)
+        alert.informativeText = l10n.forceQuitConfirmBody
+        alert.addButton(withTitle: l10n.forceQuit)
+        alert.addButton(withTitle: l10n.cancel)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
         app.forceTerminate()
     }
 #endif
 
     func activateApp(_ item: MenuBarItem) {
         guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == item.bundleIdentifier }) else { return }
+        app.unhide()
         if item.appType == .statusbarOnly {
-            app.unhide()
-            NSWorkspace.shared.launchApplication(
-                withBundleIdentifier: item.bundleIdentifier,
-                options: [],
-                additionalEventParamDescriptor: nil,
-                launchIdentifier: nil
-            )
+            // NSRunningApplication.activate() cannot foreground accessory apps
+            // (macOS security restriction). Re-opening the bundle activates a
+            // running app (or launches it if it quit in the meantime), which
+            // replaces the deprecated launchApplication(withBundleIdentifier:).
+            let config = NSWorkspace.OpenConfiguration()
+            config.activates = true
+            let url = app.bundleURL ?? (try? NSWorkspace.shared.urlForApplication(withBundleIdentifier: item.bundleIdentifier))
+            guard let url else { return }
+            Task {
+                _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: config)
+            }
         } else {
-            app.unhide()
             app.activate()
         }
     }
@@ -199,4 +264,6 @@ final class MenuBarMonitor {
 extension Notification.Name {
     static let refreshIntervalChanged = Notification.Name("refreshIntervalChanged")
     static let aggregationShouldShow = Notification.Name("aggregationShouldShow")
+    static let menuBarItemsChanged = Notification.Name("menuBarItemsChanged")
+    static let toggleAggregationPanel = Notification.Name("toggleAggregationPanel")
 }

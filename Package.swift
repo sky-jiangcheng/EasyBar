@@ -16,6 +16,11 @@ let package = Package(
             exclude: [
                 "Resources"
             ]
+        ),
+        .testTarget(
+            name: "StatusBarProTests",
+            dependencies: ["StatusBar Pro"],
+            path: "Tests/StatusBarProTests"
         )
     ]
 )

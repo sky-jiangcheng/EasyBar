@@ -5,84 +5,60 @@
 - 仅使用公共 macOS API
 - 通过 `NSWorkspace.shared.runningApplications` 列出运行中的应用
 - 不请求屏幕录制、输入监控、文件访问、网络访问或自动化权限
-- 请求 Accessibility 权限以检测应用状态（运行中/隐藏）
+- **不请求辅助功能（Accessibility）权限**：仅在界面上只读展示 `AXIsProcessTrusted()` 的结果，未授权不影响任何功能
 - 包含最小 App Sandbox 授权文件 `Sources/StatusBar Pro/Resources/StatusBar Pro.entitlements`
-- 通过 `script/build_and_run.sh` 提供本地签名 `.app` 包
-- 包含占位 App Icon 资源目录 `Sources/StatusBar Pro/Resources/Assets.xcassets`
+- App 图标为正式设计稿（`design/leaf-icon` 为源文件），`Contents.json` 的 `size` 字段已修正为合法的 `WxH` 形式
+- 发布流程不依赖 Xcode 工程：`script/release.sh` 直接编译 SPM 产物并组装 `.app`
 
 ## 提交前必要步骤
 
-1. 安装完整 Xcode 并使用 `xcode-select` 选择
-2. 打开 `StatusBar Pro.xcodeproj`
-3. 使用 Apple Developer 账户登录 Xcode
-4. 选择 `StatusBar Pro` target，在 Signing & Capabilities 中选择你的 Team
-5. 为 `com.jiangcheng.MacStatusApp` 创建 Apple Developer App ID（或更新 bundle identifier）
-6. 保持 Automatically manage signing 启用，让 Xcode 自动创建 provisioning profile
-7. 确认 App Sandbox 已通过 `Sources/StatusBar Pro/Resources/StatusBar Pro.entitlements` 启用
-8. 配置 Mac App Store 发布证书和 provisioning profile
-9. 添加生产元数据：
-   - App 图标集
-   - 版本号和构建号
-   - 版权字符串
-   - 应用分类
-   - 隐私营养标签（声明此版本仅请求 Accessibility 权限）
-10. 使用 Xcode Organizer 归档、验证并上传到 App Store Connect
+1. 安装完整 Xcode、同意许可并用 `xcode-select` 选择（`xcode-select -p` 必须指向 `Xcode.app`，否则 SwiftUI 宏插件缺失，构建会失败）
+2. 本地跑通一次发布构建：`CHANNEL=mas SIGNING_IDENTITY="Apple Distribution: …" bash script/release.sh`
+3. 在 Apple Developer 后台确认 / 创建 `com.jiangcheng.MacStatusApp` 的 App ID
+4. 创建并下载 Mac App Store 类型的 provisioning profile
+5. 确认 App Sandbox 由 `Sources/StatusBar Pro/Resources/StatusBar Pro.entitlements` 启用（MAS 渠道的 `-D MAC_APP_STORE` 会编译期移除 Quit / Force Quit）
+6. 核对 `script/release.sh` 中内嵌的 `Info.plist`：Bundle ID、版本号（`APP_VERSION` / `BUILD_NUMBER`）、`LSMinimumSystemVersion`、分类
+7. 隐私营养标签：**不收集任何数据**
+8. 重新截取 App Store 截图。`AppStoreScreenshots/` 里的文件仍是改版前的旧品牌命名（`macstatus-*`），与当前 UI 不符
+9. 上传：走 CI（`.github/workflows/release.yml`，推送 `v*` 标签）或手动
+   `xcrun altool --upload-app --type macos --file "dist/StatusBar Pro.pkg" --apiKey … --apiIssuer …`
 
-## 当前本地状态
+## 构建与打包（唯一流程）
 
-- `StatusBar Pro.xcodeproj` 存在，包含 `StatusBar Pro` macOS target 和共享 scheme
-- Xcode Debug 构建成功，Team `M3A6LK593A`
-- Xcode Release 归档成功
-- App Store Connect 导出成功，生成 `build/export/StatusBar Pro.pkg`
-- 导出包使用 `Cloud Managed Apple Distribution`
-- 导出 app 使用 `Team Store Provisioning Profile: com.jiangcheng.MacStatusApp`
-- App Store Connect 上传成功，包正在处理中
+| 渠道 | 命令 | Bundle ID | 沙盒 | 产物 |
+|------|------|-----------|------|------|
+| Mac App Store | `CHANNEL=mas bash script/release.sh` | `com.jiangcheng.MacStatusApp` | 开 | `dist/StatusBar Pro.pkg` → altool |
+| 官网自分发 | `CHANNEL=devid bash script/release.sh` | `com.jiangcheng.EasyBar` | 关 | `dist/StatusBar Pro.app` → DMG → 公证 |
 
-## 创建 App Store Connect App 记录
+必需环境变量：`SIGNING_IDENTITY`（mas：`Apple Distribution: …`；devid：`Developer ID Application: …`），其余可选变量见 `script/release.sh` 头部注释。
 
-在 App Store Connect 中创建新的 macOS app：
+本地开发用 `script/build_and_run.sh`，它采用 devid 渠道的 Bundle ID 与 entitlements（沙盒关闭）。
 
-- Platform: macOS
-- Name: StatusBar Pro
-- Bundle ID: `com.jiangcheng.MacStatusApp`
-- SKU: `easybar-001`
-- User Access: Full Access
-
-上传新构建：
-
-```bash
-env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -exportArchive -archivePath build/StatusBar Pro.xcarchive -exportPath build/upload -exportOptionsPlist ExportOptionsUpload.plist -allowProvisioningUpdates
-```
-
-## 功能特性
-
-### 核心功能
-- App 类型自动检测（Status Bar / Dock）
-- 操作按钮（Open / Quit / Force Quit）
-- 实时监控运行中的应用
-- 搜索过滤
-- Stat Cards 统计（Total / Status Bar / Dock）
-
-### 界面设计
-- HSplitView 布局（sidebar + 详情）
-- Popover 聚合面板（状态栏快速访问）
-- 操作按钮（Open 🔵 / Quit 🔴 / Force Quit 🟠）
-
-### App 类型
-- **Status Bar**：仅有状态栏图标，无 Dock 图标。使用 `launchApplication` 激活。
-- **Dock**：有 Dock 图标。使用 `activate` 激活。
+> `ExportOptions.plist` / `ExportOptionsUpload.plist` 是早期 Xcode 归档流程的遗留文件，当前流水线不再读取它们。
 
 ## 重要约束
 
-此版本有意避免全局热键，因为 App Store 安全的全局快捷键处理可能需要额外权限或额外的审查说明。已实现的快捷键在 StatusBar Pro 活动时工作：
+此版本有意避免全局热键，因为 App Store 安全的全局快捷键处理可能需要额外权限或额外的审查说明。
 
-- `Command R`：刷新运行中的应用
-- `Command Shift H`：隐藏 StatusBar Pro
-- `Command F`：搜索
-- `Command W`：关闭窗口
+当前可用的快捷键（随菜单/菜单项生效）：
+
+- `Command Q`：退出 StatusBar Pro（菜单栏图标右键菜单）
+- `Command ,`：打开设置（菜单栏图标右键菜单）
+
+> 注：应用没有全局热键；主窗口内也未注册额外的键盘快捷键。
 
 ## 已知限制
 
-- Status Bar 应用无法通过 `NSRunningApplication.activate()` 激活（macOS 安全限制）
+- Status Bar 应用无法通过 `NSRunningApplication.activate()` 激活（macOS 安全限制），本应用对 accessory 应用使用 `launchApplication` 唤起
 - 部分 accessory app（如 Macs Fan Control）无法被其他 app 激活
-- App 类型检测基于 `activationPolicy`，无法自动检测状态栏图标
+- App 类型检测基于 `activationPolicy`，无法读取真实的状态栏图标归属
+- 聚合面板不会隐藏系统菜单栏图标（v1.6.0 起移除 AX 隐藏方案），仅在菜单栏下方浮动显示
+- 暗色 App 图标变体（`Assets.xcassets/AppIcon.appiconset/dark/`）只在 Xcode 资产目录（`Assets.car`）流程下生效；`script/release.sh` 用 `iconutil` 生成 `.icns`，该格式只包含浅色图标
+- MAS 沙盒下 `NSRunningApplication.terminate()` 被系统拦截，因此 mas 渠道用 `-D MAC_APP_STORE` 编译期剔除退出功能
+
+## 构建环境验证记录
+
+- `swift build` 可在本机通过（Swift 6.4 / macOS SDK）：
+  - 首选：`sudo xcodebuild -license accept && sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
+  - 未切换 Xcode 时的等价命令见 `README.md` 的「构建环境要求」（显式指定 `-plugin-path`）
+- 编译告警：仅 `NSWorkspace.launchApplication(withBundleIdentifier:)` 的弃用告警（有意保留，见 README「已知限制」）

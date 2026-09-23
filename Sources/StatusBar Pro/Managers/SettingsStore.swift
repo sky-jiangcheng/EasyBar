@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 
@@ -9,8 +10,9 @@ final class SettingsStore {
     var autoHideDelay: TimeInterval? = 5.0
     var refreshInterval: TimeInterval = 2.0
     var iconSpacing: IconSpacing = .default
-    var hiddenBundleIDs: Set<String> = []
     var customOrder: [String] = []
+    var appearance: AppearanceMode = .system
+    var language: AppLanguage = .system
 
     enum AggregationMode: String, CaseIterable {
         case aggregation = "Aggregation"
@@ -60,15 +62,26 @@ final class SettingsStore {
 
     private let defaults = UserDefaults.standard
 
+    /// Current translation table; views reading this re-render on language change.
+    var l10n: L10nTable { L10n.table(for: language) }
+
     init() {
         load()
+    }
+
+    /// Applies the selected appearance globally. Call after launch and on change.
+    func applyAppearance() {
+        switch appearance {
+        case .system: NSApp.appearance = nil
+        case .light: NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
+        }
     }
 
     func load() {
         aggregationMode = AggregationMode(rawValue: defaults.string(forKey: "aggregationMode") ?? "") ?? .aggregation
         aggregationIcon = AggregationIconType(rawValue: defaults.string(forKey: "aggregationIcon") ?? "") ?? .dots
         iconSpacing = IconSpacing(rawValue: defaults.string(forKey: "iconSpacing") ?? "") ?? .default
-        hiddenBundleIDs = Set(defaults.stringArray(forKey: "hiddenBundleIDs") ?? [])
         customOrder = defaults.stringArray(forKey: "customOrder") ?? []
 
         if defaults.bool(forKey: "autoHideDelay_never") {
@@ -80,6 +93,9 @@ final class SettingsStore {
 
         let storedRefresh = defaults.double(forKey: "refreshInterval")
         refreshInterval = storedRefresh > 0 ? storedRefresh : 2.0
+
+        appearance = AppearanceMode(rawValue: defaults.string(forKey: "appearance") ?? "") ?? .system
+        language = AppLanguage(rawValue: defaults.string(forKey: "language") ?? "") ?? .system
     }
 
     func save() {
@@ -87,8 +103,9 @@ final class SettingsStore {
         defaults.set(aggregationIcon.rawValue, forKey: "aggregationIcon")
         defaults.set(refreshInterval, forKey: "refreshInterval")
         defaults.set(iconSpacing.rawValue, forKey: "iconSpacing")
-        defaults.set(Array(hiddenBundleIDs), forKey: "hiddenBundleIDs")
         defaults.set(customOrder, forKey: "customOrder")
+        defaults.set(appearance.rawValue, forKey: "appearance")
+        defaults.set(language.rawValue, forKey: "language")
 
         if let delay = autoHideDelay {
             defaults.set(delay, forKey: "autoHideDelay")
@@ -99,28 +116,26 @@ final class SettingsStore {
         }
     }
 
-    func toggleHidden(bundleID: String) {
-        if hiddenBundleIDs.contains(bundleID) {
-            hiddenBundleIDs.remove(bundleID)
-        } else {
-            hiddenBundleIDs.insert(bundleID)
+    /// Appends IDs not yet in the custom order, keeping their relative position.
+    /// Called by the Order tab when a newly detected app should slot in after
+    /// user-ordered icons instead of being ignored.
+    func syncOrder(with detectedIDs: [String]) {
+        var changed = false
+        for id in detectedIDs where !customOrder.contains(id) {
+            customOrder.append(id)
+            changed = true
         }
+        if changed { save() }
+    }
+
+    /// Drops custom-order entries whose IDs are absent from `detectedIDs`.
+    /// Called at termination so quit apps stop accumulating in UserDefaults;
+    /// a returning app re-enters via `syncOrder` on the next scan.
+    func pruneOrder(keeping detectedIDs: [String]) {
+        let keep = Set(detectedIDs)
+        let pruned = customOrder.filter { keep.contains($0) }
+        guard pruned.count != customOrder.count else { return }
+        customOrder = pruned
         save()
-    }
-
-    func isHidden(bundleID: String) -> Bool {
-        hiddenBundleIDs.contains(bundleID)
-    }
-
-    func moveItem(from source: IndexSet, to destination: Int) {
-        customOrder.move(fromOffsets: source, toOffset: destination)
-        save()
-    }
-
-    func addToOrder(bundleID: String) {
-        if !customOrder.contains(bundleID) {
-            customOrder.append(bundleID)
-            save()
-        }
     }
 }

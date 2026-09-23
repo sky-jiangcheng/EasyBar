@@ -8,19 +8,20 @@ struct ContentView: View {
     @State private var selectedFilter: AppFilter = .all
 
     enum AppFilter: String, CaseIterable {
-        case all = "All"
-        case statusbar = "Status Bar"
-        case dock = "Dock"
+        case all, statusbar, dock
     }
 
+    private var l10n: L10nTable { settings.l10n }
+
     private var filteredItems: [MenuBarMonitor.MenuBarItem] {
+        let base = menuBarMonitor.sortedByCustomOrder(menuBarMonitor.menuBarItems)
         switch selectedFilter {
         case .all:
-            menuBarMonitor.menuBarItems
+            return base
         case .statusbar:
-            menuBarMonitor.menuBarItems.filter { $0.appType == .statusbarOnly }
+            return base.filter { $0.appType == .statusbarOnly }
         case .dock:
-            menuBarMonitor.menuBarItems.filter { $0.appType == .dockOnly }
+            return base.filter { $0.appType == .dockOnly }
         }
     }
 
@@ -33,19 +34,8 @@ struct ContentView: View {
                 .frame(minWidth: 400, idealWidth: 500)
         }
         .frame(minWidth: 700, minHeight: 500)
-        .alert("Accessibility Permission Required", isPresented: Binding(
-            get: { accessibilityManager.showPermissionAlert },
-            set: { accessibilityManager.showPermissionAlert = $0 }
-        )) {
-            Button("Cancel") {
-                accessibilityManager.showPermissionAlert = false
-            }
-            Button("Open Settings") {
-                accessibilityManager.openAccessibilitySettings()
-                accessibilityManager.showPermissionAlert = false
-            }
-        } message: {
-            Text("StatusBar Pro needs Accessibility permission to manage menu bar icons.")
+        .onAppear {
+            accessibilityManager.refresh()
         }
     }
 
@@ -59,14 +49,14 @@ struct ContentView: View {
 
     private var sidebarHeader: some View {
         VStack(spacing: 8) {
-            Picker("Filter", selection: $selectedFilter) {
-                ForEach(AppFilter.allCases, id: \.self) { filter in
-                    Text(filter.rawValue).tag(filter)
-                }
+            Picker(l10n.all, selection: $selectedFilter) {
+                Text(l10n.all).tag(AppFilter.all)
+                Text(l10n.statusBar).tag(AppFilter.statusbar)
+                Text(l10n.dock).tag(AppFilter.dock)
             }
             .pickerStyle(.segmented)
 
-            Text("\(filteredItems.count) apps")
+            Text(String(format: l10n.appsCount, filteredItems.count))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -79,13 +69,13 @@ struct ContentView: View {
         List {
             if filteredItems.isEmpty {
                 ContentUnavailableView(
-                    "No Apps",
+                    l10n.noApps,
                     systemImage: "app.badge",
-                    description: Text("No apps in this category.")
+                    description: Text(selectedFilter == .all ? l10n.noAppsFound : l10n.noAppsInCategory)
                 )
             } else {
                 ForEach(filteredItems) { item in
-                    SidebarRow(item: item)
+                    SidebarRow(item: item, l10n: l10n)
                 }
             }
         }
@@ -112,26 +102,29 @@ struct ContentView: View {
                     .font(.title)
                     .fontWeight(.semibold)
 
-                Text("Menu Bar Manager")
+                Text(l10n.menuBarManager)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            if !accessibilityManager.isAuthorized {
-                Button("Grant Permission") {
-                    accessibilityManager.requestAuthorization()
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-            } else {
-                Label("Granted", systemImage: "checkmark.shield.fill")
+            // Diagnostic only — the app never requests Accessibility access, so
+            // this is a passive label instead of a permission prompt.
+            if accessibilityManager.isAuthorized {
+                Label(l10n.granted, systemImage: "checkmark.shield.fill")
                     .font(.caption)
                     .foregroundStyle(.green)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(.green.opacity(0.1), in: Capsule())
+            } else {
+                Label(l10n.accessibilityOptional, systemImage: "info.circle")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.quaternary.opacity(0.6), in: Capsule())
             }
         }
         .padding(.horizontal, 24)
@@ -141,7 +134,7 @@ struct ContentView: View {
     private var statsView: some View {
         HStack(spacing: 12) {
             StatCard(
-                title: "Total",
+                title: l10n.total,
                 value: "\(menuBarMonitor.menuBarItems.count)",
                 icon: "list.bullet",
                 color: .blue,
@@ -151,7 +144,7 @@ struct ContentView: View {
             }
 
             StatCard(
-                title: "Status Bar",
+                title: l10n.statusBar,
                 value: "\(menuBarMonitor.menuBarItems.filter { $0.appType == .statusbarOnly }.count)",
                 icon: "menubar.rectangle",
                 color: .purple,
@@ -161,7 +154,7 @@ struct ContentView: View {
             }
 
             StatCard(
-                title: "Dock",
+                title: l10n.dock,
                 value: "\(menuBarMonitor.menuBarItems.filter { $0.appType == .dockOnly }.count)",
                 icon: "dock.rectangle",
                 color: .green,
@@ -179,6 +172,7 @@ private struct SidebarRow: View {
     @Environment(MenuBarMonitor.self) private var menuBarMonitor
 
     let item: MenuBarMonitor.MenuBarItem
+    let l10n: L10nTable
 
     var body: some View {
         HStack(spacing: 10) {
@@ -200,7 +194,7 @@ private struct SidebarRow: View {
                     .font(.body)
                     .lineLimit(1)
 
-                Text(item.appType == .statusbarOnly ? "Status Bar" : "Dock")
+                Text(item.appType == .statusbarOnly ? l10n.statusBar : l10n.dock)
                     .font(.caption)
                     .foregroundStyle(item.appType == .statusbarOnly ? .purple : .green)
             }
@@ -216,7 +210,7 @@ private struct SidebarRow: View {
                         .foregroundStyle(.blue)
                 }
                 .buttonStyle(.plain)
-                .help("Open")
+                .help(l10n.open)
 
 #if !MAC_APP_STORE
                 Button {
@@ -227,7 +221,7 @@ private struct SidebarRow: View {
                         .foregroundStyle(.red)
                 }
                 .buttonStyle(.plain)
-                .help("Quit")
+                .help(l10n.quit)
 
                 Button {
                     menuBarMonitor.forceQuitApp(item)
@@ -237,7 +231,7 @@ private struct SidebarRow: View {
                         .foregroundStyle(.orange)
                 }
                 .buttonStyle(.plain)
-                .help("Force Quit")
+                .help(l10n.forceQuit)
 #endif
             }
         }
