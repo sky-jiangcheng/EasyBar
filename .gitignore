@@ -1,0 +1,18 @@
+.build/
+build/
+dist/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+*.p12
+*.mobileprovision
+AuthKey_*.p8
+.workbuddy/
+
+# Icon design artifacts: the SVGs and scripts under design/ are the sources of
+# truth; the rendered PNG/ICNS output is copied into the asset catalog when needed.
+design/leaf-icon/png-output/
+design/leaf-icon/iconset.iconset/
+design/leaf-icon/render_icons
+design/leaf-icon/*.icns
+design/leaf-icon/preview-*.png

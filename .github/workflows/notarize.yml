@@ -1,0 +1,107 @@
+name: Release via Developer ID
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Marketing version (e.g. 1.14.0)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: devid-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  notarize:
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        run: |
+          V="${{ inputs.version }}"
+          if [ -z "$V" ]; then
+            V="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "build=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Developer ID certificate
+        env:
+          P12_BASE64: ${{ secrets.DEVELOPER_ID_CERT_P12 }}
+          P12_PASSWORD: ${{ secrets.DEVELOPER_ID_CERT_PASSWORD }}
+        run: |
+          CERT_PATH="$RUNNER_TEMP/devid.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/devid.keychain-db"
+          echo -n "$P12_BASE64" | base64 -D > "$CERT_PATH"
+          security create-keychain -p "$P12_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$P12_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$P12_PASSWORD" "$KEYCHAIN_PATH"
+          SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>&1 | grep 'Developer ID Application' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+          [ -n "$SIGNING_IDENTITY" ] || { echo "no Developer ID Application identity found" >&2; exit 1; }
+          echo "SIGNING_IDENTITY=$SIGNING_IDENTITY" >> "$GITHUB_ENV"
+          echo "identity=$SIGNING_IDENTITY"
+
+      - name: Configure App Store Connect API key
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          echo -n "$API_KEY_BASE64" | base64 -D > "$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8"
+
+      - name: Build and sign (hardened runtime, no sandbox)
+        env:
+          CHANNEL: devid
+          APP_VERSION: ${{ steps.version.outputs.version }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build }}
+          BUNDLE_ID: ${{ vars.BUNDLE_ID_DIRECT || 'com.jiangcheng.EasyBar' }}
+        run: bash script/release.sh
+
+      - name: Create signed DMG
+        run: |
+          DMG_DIR="$RUNNER_TEMP/dmg"
+          rm -rf "$DMG_DIR"
+          mkdir -p "$DMG_DIR"
+          cp -R "dist/StatusBar.app" "$DMG_DIR/"
+          ln -s /Applications "$DMG_DIR/Applications"
+          hdiutil create -volname "StatusBar" -srcfolder "$DMG_DIR" -ov -format UDZO "dist/StatusBar.dmg"
+          codesign --sign "$SIGNING_IDENTITY" --timestamp "dist/StatusBar.dmg"
+
+      - name: Notarize and staple
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          xcrun notarytool submit "dist/StatusBar.dmg" \
+            --key "$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8" \
+            --key-id "$API_KEY_ID" \
+            --issuer "$API_ISSUER_ID" \
+            --wait
+          xcrun stapler staple "dist/StatusBar.dmg"
+          xcrun stapler validate "dist/StatusBar.dmg"
+          spctl -a -vv -t install "dist/StatusBar.dmg"
+
+      - name: Upload DMG artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StatusBar-devid-${{ steps.version.outputs.version }}
+          path: dist/StatusBar.dmg
+          if-no-files-found: error
