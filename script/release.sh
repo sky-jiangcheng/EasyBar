@@ -84,8 +84,8 @@ for a in $ARCHS; do ARCH_FLAGS+=(--arch "$a"); done
 DEFINES=(${SWIFT_DEFINES[@]+"${SWIFT_DEFINES[@]}"})
 
 echo "==> Building release binary (channel: $CHANNEL, archs: $ARCHS)"
-swift build --disable-sandbox "${SPM_ISOLATION[@]}" -c release "${ARCH_FLAGS[@]}" "${DEFINES[@]}" --scratch-path "$ROOT_DIR/.build"
-BIN_DIR="$(swift build --disable-sandbox "${SPM_ISOLATION[@]}" -c release "${ARCH_FLAGS[@]}" "${DEFINES[@]}" --scratch-path "$ROOT_DIR/.build" --show-bin-path)"
+swift build --disable-sandbox "${SPM_ISOLATION[@]}" -c release "${ARCH_FLAGS[@]}" ${DEFINES[@]+"${DEFINES[@]}"} --scratch-path "$ROOT_DIR/.build"
+BIN_DIR="$(swift build --disable-sandbox "${SPM_ISOLATION[@]}" -c release "${ARCH_FLAGS[@]}" ${DEFINES[@]+"${DEFINES[@]}"} --scratch-path "$ROOT_DIR/.build" --show-bin-path)"
 BINARY="$BIN_DIR/$PRODUCT"
 [ -f "$BINARY" ] || { echo "binary not found: $BINARY" >&2; exit 1; }
 
