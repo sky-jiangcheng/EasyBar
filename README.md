@@ -160,14 +160,20 @@ swift build
 
 | Secret | 用途 |
 |--------|------|
-| `APPLE_DISTRIBUTION_CERT_P12` | Apple Distribution 证书 `.p12`（base64）— MAS |
+| `APPLE_DISTRIBUTION_CERT_P12` | Apple Distribution 证书 `.p12`（base64）— MAS 应用签名 |
 | `APPLE_DISTRIBUTION_CERT_PASSWORD` | 该证书密码 |
+| `APPLE_INSTALLER_CERT_P12` | 3rd Party Mac Developer Installer 证书 `.p12`（base64）— MAS `.pkg` 签名 |
+| `APPLE_INSTALLER_CERT_PASSWORD` | 该证书密码 |
 | `APPLE_PROVISIONING_PROFILE` | Mac App Store `.mobileprovision`（base64） |
 | `DEVELOPER_ID_CERT_P12` | Developer ID Application 证书 `.p12`（base64）— 官网版 |
 | `DEVELOPER_ID_CERT_PASSWORD` | 该证书密码 |
 | `APP_STORE_CONNECT_API_KEY_ID` | API Key ID（两条流水线共用） |
 | `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID |
 | `APP_STORE_CONNECT_API_KEY` | `.p8` 私钥内容（base64） |
+
+> MAS 的 `.pkg` 必须用 **3rd Party Mac Developer Installer**（Mac Installer Distribution）证书签名，用应用签名证书会被 `altool` 以 409 拒绝。该证书需连同 Apple WWDR G3 中间证书一起导入，`release.yml` 会自动下载并导入中间证书。
+
+> 切勿把 `.p12` / `.cer` / `.provisionprofile` / `.p8` 或 `.uploads/` 下的上传产物提交进仓库——仓库为公开仓库，私钥一旦入库即视为泄露。
 
 可选变量（Repo → Settings → Secrets and variables → Actions → Variables）：
 

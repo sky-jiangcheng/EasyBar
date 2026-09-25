@@ -34,38 +34,52 @@
           </div>
           <div class="feature-card">
             <h3>📊 实时统计</h3>
-            <p>Total / Status Bar / Dock 统计卡片</p>
+            <p>Total / Status Bar / Dock 统计卡片，点击联动过滤</p>
           </div>
           <div class="feature-card">
             <h3>🔎 搜索过滤</h3>
             <p>按名称或 Bundle ID 快速搜索</p>
+          </div>
+          <div class="feature-card">
+            <h3>🎨 外观主题</h3>
+            <p>跟随系统 / 浅色 / 深色，全局即时生效</p>
+          </div>
+          <div class="feature-card">
+            <h3>🌍 多语言</h3>
+            <p>简体中文 / English / 日本語 / Deutsch / Español</p>
+          </div>
+          <div class="feature-card">
+            <h3>↕️ 拖拽排序</h3>
+            <p>拖拽调整菜单栏图标的自定义顺序</p>
+          </div>
+          <div class="feature-card">
+            <h3>🔒 无需权限</h3>
+            <p>运行时不请求任何系统权限</p>
           </div>
         </div>
 
         <h2>App 类型</h2>
         <p>
           <span class="badge badge-statusbar">Status Bar</span>
-          仅有状态栏图标，无 Dock 图标。使用 <code>launchApplication</code> 激活。
+          仅有状态栏图标，无 Dock 图标。使用 <code>openApplication</code> 激活。
         </p>
         <p>
           <span class="badge badge-dock">Dock</span>
           有 Dock 图标。使用 <code>activate</code> 激活。
         </p>
 
-        <h2>本地运行</h2>
-        <pre><code># 构建并运行
-./script/build_and_run.sh
-
-# 仅构建
-swift build
-
-# 运行已构建的 app
-./script/build_and_run.sh run</code></pre>
+        <h2>技术栈</h2>
+        <ul>
+          <li>语言：Swift 6.0</li>
+          <li>框架：SwiftUI + AppKit</li>
+          <li>架构：<code>@Observable</code>（Observation framework）</li>
+          <li>构建：Swift Package Manager</li>
+        </ul>
 
         <h2>系统要求</h2>
         <ul>
           <li>macOS 14.0+</li>
-          <li>Accessibility 权限（用于检测应用状态）</li>
+          <li>不请求任何权限：应用只读取辅助功能开关状态用于界面只读展示</li>
         </ul>
 
         <h2>链接</h2>
@@ -90,38 +104,52 @@ swift build
           </div>
           <div class="feature-card">
             <h3>📊 Live stats</h3>
-            <p>Total / Status Bar / Dock counters</p>
+            <p>Total / Status Bar / Dock counters with click-to-filter</p>
           </div>
           <div class="feature-card">
             <h3>🔎 Search &amp; filter</h3>
             <p>Filter instantly by name or bundle identifier</p>
+          </div>
+          <div class="feature-card">
+            <h3>🎨 Themes</h3>
+            <p>System, light, and dark, applied instantly across the app</p>
+          </div>
+          <div class="feature-card">
+            <h3>🌍 Languages</h3>
+            <p>English, 简体中文, 日本語, Deutsch, Español</p>
+          </div>
+          <div class="feature-card">
+            <h3>↕️ Drag to reorder</h3>
+            <p>Arrange menu bar icons into a custom order</p>
+          </div>
+          <div class="feature-card">
+            <h3>🔒 No permissions</h3>
+            <p>Runs without requesting any system access</p>
           </div>
         </div>
 
         <h2>App types</h2>
         <p>
           <span class="badge badge-statusbar">Status Bar</span>
-          Status item only, no Dock icon. Activated with <code>launchApplication</code>.
+          Status item only, no Dock icon. Activated with <code>openApplication</code>.
         </p>
         <p>
           <span class="badge badge-dock">Dock</span>
           Has a Dock icon. Activated with <code>activate</code>.
         </p>
 
-        <h2>Run locally</h2>
-        <pre><code># Build and run
-./script/build_and_run.sh
-
-# Build only
-swift build
-
-# Run the already-built app
-./script/build_and_run.sh run</code></pre>
+        <h2>Tech stack</h2>
+        <ul>
+          <li>Language: Swift 6.0</li>
+          <li>Frameworks: SwiftUI + AppKit</li>
+          <li>Architecture: <code>@Observable</code> (Observation framework)</li>
+          <li>Build: Swift Package Manager</li>
+        </ul>
 
         <h2>Requirements</h2>
         <ul>
           <li>macOS 14.0 or later</li>
-          <li>Accessibility permission (used to detect app state)</li>
+          <li>No permissions required — accessibility state is only read for display</li>
         </ul>
 
         <h2>Links</h2>
