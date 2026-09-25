@@ -152,8 +152,13 @@ fi
 codesign --verify --deep --strict "$APP_BUNDLE"
 
 if [ "$CHANNEL" = "mas" ]; then
-  echo "==> Packaging .pkg with: $INSTALLER_IDENTITY"
-  productbuild --component "$APP_BUNDLE" /Applications --sign "$INSTALLER_IDENTITY" "$PKG_PATH"
+  if [ -n "${INSTALLER_IDENTITY:-}" ]; then
+    echo "==> Packaging .pkg with: $INSTALLER_IDENTITY"
+    productbuild --component "$APP_BUNDLE" /Applications --sign "$INSTALLER_IDENTITY" "$PKG_PATH"
+  else
+    echo "==> Packaging .pkg (unsigned — App Store Connect will re-sign)"
+    productbuild --component "$APP_BUNDLE" /Applications "$PKG_PATH"
+  fi
   echo "==> Done: $PKG_PATH"
 else
   echo "==> Done: $APP_BUNDLE"

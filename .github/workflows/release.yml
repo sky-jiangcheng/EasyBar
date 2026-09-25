@@ -83,6 +83,7 @@ jobs:
           APP_VERSION: ${{ steps.version.outputs.version }}
           BUILD_NUMBER: ${{ steps.version.outputs.build }}
           BUNDLE_ID: ${{ vars.BUNDLE_ID || 'com.jiangcheng.MacStatusApp' }}
+          INSTALLER_IDENTITY: ""
         run: |
           bash script/release.sh
 
