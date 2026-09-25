@@ -6,8 +6,15 @@ dist/
 xcuserdata/
 *.p12
 *.mobileprovision
+*.provisionprofile
+*.cer
+*.p8
 AuthKey_*.p8
 .workbuddy/
+
+# Uploaded artifacts (certificates, profiles, screenshots) must never be committed.
+.uploads/
+.trae-html-share-packages/
 
 # Icon design artifacts: the SVGs and scripts under design/ are the sources of
 # truth; the rendered PNG/ICNS output is copied into the asset catalog when needed.
