@@ -132,6 +132,7 @@ swift build
 | v1.12.0 | App 类型检测 + 移除 hide 功能 |
 | v1.13.0 | **里程碑：Status Bar app 跳转修复** |
 | v1.14.0 | 代码 review 修复（P0×3/P1×7/P2×3 + 回归 9 项）；外观主题；多语言（中/日/英/德/西） |
+| v1.17.0 | 发布链路修复与安全整理：MAS `.pkg` 改用 3rd Party Mac Developer Installer 证书签名并导入 WWDR G3 中间证书；描述文件 UUID 提取改用 grep；停止跟踪证书 / 描述文件等上传产物并清理历史；官网与 README 更新 |
 | v1.16.0 | 品牌统一：产品名 StatusBar Pro → StatusBar（SPM/产物/显示名/本地化/CI/docs）；GitHub 仓库与 Pages 从 EasyBar 迁至 StatusBar；发布链路梳理 |
 | v1.15.0 | 修复排序页自动写入自定义顺序导致「未排序」失效；区分 Normal/Disabled 模式策略；保留菜单项名称、类型与图标更新；修正聚合面板可见性状态；完善测试与构建验证 |
 
