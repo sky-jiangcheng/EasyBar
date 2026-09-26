@@ -1,15 +1,46 @@
-"""Legacy placeholder-icon generator, kept for reference only.
+#!/usr/bin/env python3
+"""Generate the AppIcon asset set from the slider-glass artwork.
 
-The shipping icons come from the leaf design pipeline under `design/leaf-icon`
-(`generate_leaf_svg.py` renders the SVGs, `render_icons.swift` produces every PNG
-size). This script still draws the old "MS" placeholder, so it is only a fallback
-if that pipeline is unavailable. Run it from the repository root so the relative
-output path resolves.
+The source is a photograph of a frosted-glass panel with two slider rails on a
+white background. We crop the panel to a square and bake a macOS rounded
+rectangle into the alpha channel, producing full-bleed 1024px canvases.
+
+Geometry
+--------
+* crop box (left, top, right, bottom) = (158, 300, 734, 876) -> 576x576
+  Measured from the panel's own edges (gradient centroid, sub-pixel accuracy).
+* corner radius = 0.2257 * side -- the panel's own radius (130/576), so the mask
+  lands exactly on the existing glass edge instead of clipping it. On the 1024
+  master this is 231px, close to Apple's 185px/1024 grid but rounder, matching
+  the macOS 26 "Tahoe" grid.
+* The canvas is full-bleed (the artwork reaches all four edges), which is what
+  the macOS 26/27 icon grid expects. The same baked squircle is what macOS
+  12-15 renders, so one asset set serves both system generations.
+
+Rendering notes
+---------------
+Every size is resampled straight from the source crop (never up from a smaller
+PNG), and the mask is drawn at 4x and box-filtered down, so the 16px corners
+stay clean. The dark appearance currently reuses the light artwork: the source
+is a light glass panel and no separate dark master exists yet.
+
+Usage
+-----
+    python3 tools/generate_app_icon.py [SOURCE_IMAGE]
 """
-from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
 
-OUT = Path("Sources/StatusBar/Resources/Assets.xcassets/AppIcon.appiconset")
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+from PIL import Image, ImageDraw
+
+CROP = (158, 300, 734, 876)
+RADIUS_RATIO = 0.2257
+SUPERSAMPLE = 4
+
+# filename -> pixel size, matching Contents.json exactly.
 SIZES = {
     "icon_16x16.png": 16,
     "icon_16x16@2x.png": 32,
@@ -23,63 +54,44 @@ SIZES = {
     "icon_512x512@2x.png": 1024,
 }
 
-
-def rounded_rect_mask(size: int, radius: int) -> Image.Image:
-    mask = Image.new("L", (size, size), 0)
-    draw = ImageDraw.Draw(mask)
-    draw.rounded_rectangle((0, 0, size - 1, size - 1), radius=radius, fill=255)
-    return mask
+ROOT = Path(__file__).resolve().parent.parent
+APPSET = ROOT / "Sources/StatusBar/Resources/Assets.xcassets/AppIcon.appiconset"
+DEFAULT_SOURCE = ROOT / ".uploads/52d6ce84-0837-4b8c-bd0b-c4b7ab158780_image_187667517090030.png"
 
 
-def draw_icon(size: int) -> Image.Image:
-    scale = size / 1024
-    image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    content = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(content)
+def squircle_mask(size: int) -> Image.Image:
+    """Anti-aliased rounded-rectangle alpha mask for a `size` x `size` icon."""
+    radius = max(1, round(RADIUS_RATIO * size))
+    big = size * SUPERSAMPLE
+    mask = Image.new("L", (big, big), 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (0, 0, big - 1, big - 1), radius=radius * SUPERSAMPLE, fill=255
+    )
+    return mask.resize((size, size), Image.LANCZOS)
 
-    for y in range(size):
-        t = y / max(size - 1, 1)
-        r = int(24 + 20 * t)
-        g = int(102 + 74 * t)
-        b = int(170 + 26 * t)
-        draw.line((0, y, size, y), fill=(r, g, b, 255))
 
-    pad = int(138 * scale)
-    panel = (pad, int(250 * scale), size - pad, int(760 * scale))
-    draw.rounded_rectangle(panel, radius=int(80 * scale), fill=(255, 255, 255, 42), outline=(255, 255, 255, 96), width=max(1, int(10 * scale)))
-
-    cx = size // 2
-    clock_r = int(142 * scale)
-    cy = int(420 * scale)
-    draw.ellipse((cx - clock_r, cy - clock_r, cx + clock_r, cy + clock_r), fill=(255, 255, 255, 226))
-    draw.line((cx, cy, cx, cy - int(90 * scale)), fill=(26, 63, 112, 255), width=max(2, int(24 * scale)))
-    draw.line((cx, cy, cx + int(78 * scale), cy + int(42 * scale)), fill=(26, 63, 112, 255), width=max(2, int(24 * scale)))
-
-    bar_y = int(635 * scale)
-    for index, width in enumerate((250, 360, 190)):
-        x = int((size - width * scale) / 2)
-        y = bar_y + int(index * 58 * scale)
-        draw.rounded_rectangle((x, y, x + int(width * scale), y + int(24 * scale)), radius=int(12 * scale), fill=(255, 255, 255, 210))
-
-    try:
-        font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", int(118 * scale))
-    except OSError:
-        font = ImageFont.load_default()
-    text = "MS"
-    bbox = draw.textbbox((0, 0), text, font=font)
-    draw.text((int((size - (bbox[2] - bbox[0])) / 2), int(115 * scale)), text, fill=(255, 255, 255, 238), font=font)
-
-    image.alpha_composite(content)
-    mask = rounded_rect_mask(size, int(214 * scale))
-    result = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    result.paste(image, (0, 0), mask)
-    return result
+def render(source: Image.Image, size: int) -> Image.Image:
+    icon = source.crop(CROP).resize((size, size), Image.LANCZOS).convert("RGBA")
+    icon.putalpha(squircle_mask(size))
+    return icon
 
 
 def main() -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
-    for filename, size in SIZES.items():
-        draw_icon(size).save(OUT / filename)
+    source_path = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_SOURCE
+    if not source_path.is_file():
+        raise SystemExit(f"source image not found: {source_path}")
+
+    source = Image.open(source_path).convert("RGB")
+    dark_dir = APPSET / "dark"
+    dark_dir.mkdir(parents=True, exist_ok=True)
+
+    for name, size in SIZES.items():
+        icon = render(source, size)
+        icon.save(APPSET / name)
+        icon.save(dark_dir / name)
+        print(f"  {name} ({size}px)")
+
+    print(f"AppIcon set written to {APPSET}")
 
 
 if __name__ == "__main__":
