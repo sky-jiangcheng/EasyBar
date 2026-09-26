@@ -21,8 +21,8 @@ Rendering notes
 ---------------
 Every size is resampled straight from the source crop (never up from a smaller
 PNG), and the mask is drawn at 4x and box-filtered down, so the 16px corners
-stay clean. The dark appearance currently reuses the light artwork: the source
-is a light glass panel and no separate dark master exists yet.
+stay clean. The dark appearance is the same artwork with black and white
+inverted, so the glass panel reads dark and the rails read light.
 
 Usage
 -----
@@ -34,7 +34,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageOps
 
 CROP = (158, 300, 734, 876)
 RADIUS_RATIO = 0.2257
@@ -70,8 +70,11 @@ def squircle_mask(size: int) -> Image.Image:
     return mask.resize((size, size), Image.LANCZOS)
 
 
-def render(source: Image.Image, size: int) -> Image.Image:
-    icon = source.crop(CROP).resize((size, size), Image.LANCZOS).convert("RGBA")
+def render(source: Image.Image, size: int, invert: bool = False) -> Image.Image:
+    icon = source.crop(CROP).resize((size, size), Image.LANCZOS)
+    if invert:
+        icon = ImageOps.invert(icon)
+    icon = icon.convert("RGBA")
     icon.putalpha(squircle_mask(size))
     return icon
 
@@ -86,9 +89,8 @@ def main() -> None:
     dark_dir.mkdir(parents=True, exist_ok=True)
 
     for name, size in SIZES.items():
-        icon = render(source, size)
-        icon.save(APPSET / name)
-        icon.save(dark_dir / name)
+        render(source, size).save(APPSET / name)
+        render(source, size, invert=True).save(dark_dir / name)
         print(f"  {name} ({size}px)")
 
     print(f"AppIcon set written to {APPSET}")
